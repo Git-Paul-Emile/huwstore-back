@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: huwstore-back
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: DATABASE_URL
+        sync: false
+      - key: ACCESS_TOKEN_SECRET
+        sync: false
+      - key: REFRESH_TOKEN_SECRET
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        sync: false
