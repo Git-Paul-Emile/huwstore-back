@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum ProductBadge {
+  NOUVEAU
+  PROMO
+  RUPTURE
+}
+
+enum PayStatus {
+  PAYE
+  EN_ATTENTE
+  ECHOUE
+}
+
+enum PayMethod {
+  WAVE
+  ORANGE_MONEY
+  COD
+  CARTE
+}
+
+enum OrderStatus {
+  EN_PREPARATION
+  EXPEDIEE
+  EN_COURS_DE_LIVRAISON
+  LIVREE
+  RETOURNEE
+}
+
+enum BannerSlot {
+  HERO
+  BANDEAU_PROMO
+  POPUP
+}
+
+enum BannerTarget {
+  TOUTES
+  MOBILE
+  DESKTOP
+}
+
+enum PromoType {
+  POURCENTAGE
+  MONTANT_FIXE
+  LIVRAISON_OFFERTE
+}
+
+enum ReviewStatus {
+  EN_ATTENTE
+  PUBLIE
+  REJETE
+}
+
+enum StockMoveType {
+  ENTREE
+  SORTIE
+  AJUSTEMENT
+  VENTE
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  image     String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id           String          @id
+  name         String
+  collection   String
+  categoryId   String
+  category     Category        @relation(fields: [categoryId], references: [id])
+  material     String
+  color        String
+  price        Int
+  compareAt    Int?
+  badge        ProductBadge?
+  rating       Float           @default(0)
+  reviewsCount Int             @default(0)
+  image        String
+  imageAlt     String
+  imageHover   String
+  active       Boolean         @default(true)
+  stock        Stock?
+  orderItems   OrderItem[]
+  reviews      Review[]
+  stockMoves   StockMovement[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Stock {
+  id        String   @id @default(cuid())
+  productId String   @unique
+  product   Product  @relation(fields: [productId], references: [id])
+  qty       Int      @default(0)
+  threshold Int      @default(5)
+  updatedAt DateTime @updatedAt
+}
+
+model StockMovement {
+  id        String        @id @default(cuid())
+  productId String
+  product   Product       @relation(fields: [productId], references: [id])
+  type      StockMoveType
+  qty       Int
+  reason    String
+  author    String
+  createdAt DateTime      @default(now())
+}
+
+model DeliveryZone {
+  id       String  @id @default(cuid())
+  city     String
+  country  String
+  fee      Int
+  freeFrom Int
+  delay    String
+  relay    Boolean @default(false)
+
+  @@unique([city, country])
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  phone        String   @unique
+  email        String?  @unique
+  passwordHash String
+  role         Role     @default(CLIENT)
+  city         String?
+  orders       Order[]
+  reviews      Review[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Order {
+  id        String      @id @default(cuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id])
+  client    String
+  city      String
+  country   String
+  items     OrderItem[]
+  total     Int
+  pay       PayStatus   @default(EN_ATTENTE)
+  method    PayMethod
+  status    OrderStatus @default(EN_PREPARATION)
+  courier   String?
+  tracking  String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String
+  qty       Int
+  price     Int
+}
+
+model Banner {
+  id     String       @id @default(cuid())
+  title  String
+  slot   BannerSlot
+  target BannerTarget @default(TOUTES)
+  start  DateTime
+  end    DateTime
+  active Boolean      @default(true)
+  image  String
+}
+
+model Promo {
+  id      String    @id @default(cuid())
+  code    String    @unique
+  type    PromoType
+  value   Int
+  minCart Int       @default(0)
+  used    Int       @default(0)
+  limit   Int
+  end     DateTime
+  active  Boolean   @default(true)
+}
+
+model Review {
+  id        String       @id @default(cuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  userId    String?
+  user      User?        @relation(fields: [userId], references: [id])
+  author    String
+  rating    Int
+  text      String       @db.Text
+  status    ReviewStatus @default(EN_ATTENTE)
+  createdAt DateTime     @default(now())
+}
