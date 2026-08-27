@@ -1,0 +1,115 @@
+{
+  "fourre-tout-oxford": {
+    "images": {
+      "beige": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839500/huwstore/products/fourre-tout-oxford/beige-1.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839501/huwstore/products/fourre-tout-oxford/generic-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839502/huwstore/products/fourre-tout-oxford/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839503/huwstore/products/fourre-tout-oxford/noir-2.jpg"
+      ],
+      "vert": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839504/huwstore/products/fourre-tout-oxford/vert-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839505/huwstore/products/fourre-tout-oxford/vert-2.jpg"
+      ],
+      "violet": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839506/huwstore/products/fourre-tout-oxford/violet-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "fourre-tout-toile-epaisse": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839507/huwstore/products/fourre-tout-toile-epaisse/generic-1.jpg"
+      ],
+      "gris": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839508/huwstore/products/fourre-tout-toile-epaisse/gris-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839509/huwstore/products/fourre-tout-toile-epaisse/gris-2.jpg"
+      ],
+      "kaki": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839510/huwstore/products/fourre-tout-toile-epaisse/kaki-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839511/huwstore/products/fourre-tout-toile-epaisse/kaki-2.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839512/huwstore/products/fourre-tout-toile-epaisse/noir-1.jpg"
+      ]
+    },
+    "video": "https://res.cloudinary.com/sbyx9l2f/video/upload/v1787839515/huwstore/products/fourre-tout-toile-epaisse/video.mp4"
+  },
+  "sac-main-patchwork-pu": {
+    "images": {
+      "bleu": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839517/huwstore/products/sac-main-patchwork-pu/bleu-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839518/huwstore/products/sac-main-patchwork-pu/bleu-2.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839519/huwstore/products/sac-main-patchwork-pu/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839520/huwstore/products/sac-main-patchwork-pu/generic-2.jpg"
+      ],
+      "jaune": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839521/huwstore/products/sac-main-patchwork-pu/jaune-1.jpg"
+      ],
+      "rose": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839522/huwstore/products/sac-main-patchwork-pu/rose-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-coton-durable": {
+    "images": {
+      "beige": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839523/huwstore/products/tote-bag-coton-durable/beige-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839524/huwstore/products/tote-bag-coton-durable/beige-2.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839525/huwstore/products/tote-bag-coton-durable/generic-1.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839526/huwstore/products/tote-bag-coton-durable/marron-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839527/huwstore/products/tote-bag-coton-durable/noir-1.jpg"
+      ]
+    },
+    "video": "https://res.cloudinary.com/sbyx9l2f/video/upload/v1787839531/huwstore/products/tote-bag-coton-durable/video.mp4"
+  },
+  "tote-bag-freedom": {
+    "images": {
+      "beige": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839533/huwstore/products/tote-bag-freedom/beige-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839534/huwstore/products/tote-bag-freedom/beige-2.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839535/huwstore/products/tote-bag-freedom/generic-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839536/huwstore/products/tote-bag-freedom/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839537/huwstore/products/tote-bag-freedom/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-velours-cotele": {
+    "images": {
+      "blanc-casse-marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839538/huwstore/products/tote-bag-velours-cotele/blanc-casse-marron-1.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839539/huwstore/products/tote-bag-velours-cotele/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839539/huwstore/products/tote-bag-velours-cotele/generic-2.jpg"
+      ],
+      "noir-blanc-casse": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839541/huwstore/products/tote-bag-velours-cotele/noir-blanc-casse-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839542/huwstore/products/tote-bag-velours-cotele/noir-blanc-casse-2.jpg"
+      ],
+      "noir-marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839543/huwstore/products/tote-bag-velours-cotele/noir-marron-1.jpg"
+      ]
+    },
+    "video": null
+  }
+}
