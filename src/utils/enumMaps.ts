@@ -1,5 +1,5 @@
 // Traduit les enums Prisma (stables, en anglais) vers les libellés FR utilisés par la maquette,
-// et inversement — un seul point de vérité au lieu d'un switch dupliqué dans chaque service.
+// et inversement - un seul point de vérité au lieu d'un switch dupliqué dans chaque service.
 function createEnumMap<Enum extends string, Label extends string>(entries: [Enum, Label][]) {
   const toLabel = new Map(entries);
   const toEnum = new Map(entries.map(([e, l]) => [l, e]));

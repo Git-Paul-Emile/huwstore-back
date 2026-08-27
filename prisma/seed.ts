@@ -1,36 +1,31 @@
-// Réinjecte en base le contenu qui était codé en dur dans front/src/data.ts et
-// front/src/admin-data.ts, pour que la maquette initiale devienne de vraies données.
+/**
+ * Seed de la base HUWSTORE.
+ *
+ *   npm run seed
+ *
+ * Rôle : écrire en base le catalogue réel décrit dans prisma/catalog.ts,
+ * avec ses déclinaisons couleur, sa galerie photo et son stock initial.
+ *
+ * Le script est IDEMPOTENT (upsert partout) : le relancer met la base à jour
+ * sans créer de doublon. Seules la galerie et les jeux de démonstration
+ * (bannières, mouvements de stock) sont réécrits à chaque exécution, parce
+ * qu'ils n'ont pas de clé naturelle stable.
+ *
+ * Les URLs des médias viennent de prisma/media.ts : Cloudinary si
+ * `npm run media:upload` a déjà tourné, sinon les fichiers locaux du front.
+ */
 import { PrismaClient, type ProductBadge, type PayMethod, type PayStatus, type OrderStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { categories, products, skuOf, INITIAL_STOCK } from "./catalog.js";
+import { productMedia, usingCloudinary } from "./media.js";
 
 const prisma = new PrismaClient();
 
-const unsplash = (id: string, w = 900, h = 1100) => `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&auto=format`;
-
-const categories = [
-  { name: "Toile & Coton", img: "1594223274512-ad4803739b7c" },
-  { name: "Cuir PU", img: "1637759292654-a12cb2be085e" },
-  { name: "Oxford", img: "1691480150204-66dd1eb77391" },
-  { name: "Mini Sacs", img: "1705909237050-7a7625b47fac" },
-  { name: "Sacs à dos", img: "1596552639068-99bd471b579c" },
-  { name: "Voyage & Maternité", img: "1597633244018-0201d0158aab" },
-  { name: "Pochettes", img: "1575403538007-acb790100421" },
-];
-
-const products = [
-  { id: "colette", name: "Sac Colette", collection: "Maison Aurélie", category: "Mini Sacs", material: "Cuir pleine fleur", color: "Fauve", price: 59000, badge: "NOUVEAU" as ProductBadge, rating: 5, reviewsCount: 42, image: unsplash("1637759292654-a12cb2be085e"), imageAlt: "Sac à main en cuir fauve avec longue bandoulière", imageHover: unsplash("1597633125184-9fd7e54f0ff7"), stock: { qty: 24, threshold: 6 } },
-  { id: "margaux", name: "Cabas Margaux", collection: "Maison Aurélie", category: "Voyage & Maternité", material: "Toile enduite", color: "Grège", price: 42000, compareAt: 52000, badge: "PROMO" as ProductBadge, rating: 4, reviewsCount: 28, image: unsplash("1594223274512-ad4803739b7c"), imageAlt: "Cabas en toile posé sur un sac en cuir noir", imageHover: unsplash("1683921470299-b8f0f3331657"), stock: { qty: 8, threshold: 10 } },
-  { id: "solene", name: "Pochette Solène", collection: "Atelier Rive", category: "Pochettes", material: "Cuir grainé", color: "Gris orage", price: 28000, badge: null, rating: 5, reviewsCount: 61, image: unsplash("1575403538007-acb790100421"), imageAlt: "Pochette en cuir gris posée sur une pile de livres", imageHover: unsplash("1683921470299-b8f0f3331657"), stock: { qty: 41, threshold: 8 } },
-  { id: "noir-lucien", name: "Sac Lucien", collection: "Atelier Rive", category: "Cuir PU", material: "Cuir façon box", color: "Noir", price: 64000, badge: "RUPTURE" as ProductBadge, rating: 5, reviewsCount: 37, image: unsplash("1702325107940-88f9cd4468c2"), imageAlt: "Sac à main noir posé sur une table", imageHover: unsplash("1705909237050-7a7625b47fac"), stock: { qty: 0, threshold: 5 } },
-  { id: "aurore", name: "Sac Aurore", collection: "Maison Aurélie", category: "Cuir PU", material: "Cuir nappa", color: "Ivoire", price: 72000, badge: "NOUVEAU" as ProductBadge, rating: 5, reviewsCount: 19, image: unsplash("1682745230951-8a5aa9a474a0"), imageAlt: "Sac ivoire posé sur une table claire", imageHover: unsplash("1596552639068-99bd471b579c"), stock: { qty: 3, threshold: 6 } },
-  { id: "camille", name: "Besace Camille", collection: "Atelier Rive", category: "Oxford", material: "Cuir vieilli", color: "Cognac", price: 48000, compareAt: 56000, badge: "PROMO" as ProductBadge, rating: 4, reviewsCount: 53, image: unsplash("1691480150204-66dd1eb77391"), imageAlt: "Besace en cuir cognac sur fond blanc", imageHover: unsplash("1637759292654-a12cb2be085e"), stock: { qty: 17, threshold: 8 } },
-  { id: "eloise", name: "Sac à dos Éloïse", collection: "Maison Aurélie", category: "Sacs à dos", material: "Toile & cuir", color: "Vert bouteille", price: 54000, badge: null, rating: 5, reviewsCount: 24, image: unsplash("1596552639068-99bd471b579c"), imageAlt: "Sac en cuir près d'un vase de fleurs blanches", imageHover: unsplash("1597633244018-0201d0158aab"), stock: { qty: 12, threshold: 6 } },
-  { id: "juliette", name: "Mini Juliette", collection: "Atelier Rive", category: "Mini Sacs", material: "Cuir grainé", color: "Bordeaux", price: 35000, badge: "NOUVEAU" as ProductBadge, rating: 5, reviewsCount: 46, image: unsplash("1705909237050-7a7625b47fac"), imageAlt: "Petit sac en cuir sur fond coloré", imageHover: unsplash("1702325107940-88f9cd4468c2"), stock: { qty: 29, threshold: 8 } },
-  { id: "victoire", name: "Cabas Victoire", collection: "Maison Aurélie", category: "Voyage & Maternité", material: "Toile & cuir", color: "Écru", price: 46000, badge: null, rating: 5, reviewsCount: 33, image: unsplash("1597633244018-0201d0158aab"), imageAlt: "Grand cabas en toile et cuir", imageHover: unsplash("1594223274512-ad4803739b7c"), stock: { qty: 20, threshold: 6 } },
-  { id: "romane", name: "Sac Romane", collection: "Atelier Rive", category: "Oxford", material: "Cuir grainé", color: "Taupe", price: 52000, compareAt: 61000, badge: "PROMO" as ProductBadge, rating: 4, reviewsCount: 39, image: unsplash("1683921470299-b8f0f3331657"), imageAlt: "Sac en cuir taupe posé sur un tabouret", imageHover: unsplash("1691480150204-66dd1eb77391"), stock: { qty: 15, threshold: 6 } },
-  { id: "capucine", name: "Pochette Capucine", collection: "Maison Aurélie", category: "Pochettes", material: "Cuir nappa", color: "Nude", price: 31000, badge: "NOUVEAU" as ProductBadge, rating: 5, reviewsCount: 21, image: unsplash("1597633125184-9fd7e54f0ff7"), imageAlt: "Pochette en cuir nude tenue à la main", imageHover: unsplash("1575403538007-acb790100421"), stock: { qty: 26, threshold: 6 } },
-  { id: "adele", name: "Sac à dos Adèle", collection: "Atelier Rive", category: "Sacs à dos", material: "Cuir vieilli", color: "Cognac", price: 58000, badge: null, rating: 5, reviewsCount: 28, image: unsplash("1596552639068-99bd471b579c"), imageAlt: "Sac à dos en cuir cognac", imageHover: unsplash("1682745230951-8a5aa9a474a0"), stock: { qty: 18, threshold: 6 } },
-];
+// ---------------------------------------------------------------------------
+// Données d'exploitation (zones de livraison) et jeux de démonstration.
+// Les clients et commandes ci-dessous sont FICTIFS : ils servent uniquement à
+// alimenter le tableau de bord et les statistiques de l'admin.
+// ---------------------------------------------------------------------------
 
 const deliveryZones = [
   { city: "Dakar", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 – 48 h", relay: true },
@@ -43,7 +38,7 @@ const deliveryZones = [
   { city: "Bamako", country: "Mali", fee: 4000, freeFrom: 95000, delay: "4 – 6 jours", relay: false },
 ];
 
-const clients = [
+const demoClients = [
   { name: "Awa Ndiaye", phone: "+221778124490", email: "awa.n@mail.com", city: "Dakar", since: "2024-11-03" },
   { name: "Fatou Bamba", phone: "+225074522180", email: "fatou.b@mail.com", city: "Abidjan", since: "2025-02-19" },
   { name: "Marième Sow", phone: "+221763301107", email: "marieme@mail.com", city: "Dakar", since: "2025-01-22" },
@@ -52,152 +47,296 @@ const clients = [
   { name: "Nadège Kouassi", phone: "+229975530210", email: "nadege@mail.com", city: "Cotonou", since: "2024-09-30" },
 ];
 
-const orders = [
-  { id: "CMD-2418", client: "Awa Ndiaye", city: "Dakar", country: "Sénégal", items: [{ productId: "colette", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "EN_COURS_DE_LIVRAISON" as OrderStatus, courier: "Livreur interne · Moussa", tracking: "MW-DK-0091", date: "2026-08-22" },
-  { id: "CMD-2417", client: "Fatou Bamba", city: "Abidjan", country: "Côte d'Ivoire", items: [{ productId: "aurore", qty: 1 }, { productId: "juliette", qty: 1 }], pay: "EN_ATTENTE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-22" },
-  { id: "CMD-2416", client: "Marième Sow", city: "Dakar", country: "Sénégal", items: [{ productId: "solene", qty: 2 }], pay: "PAYE" as PayStatus, method: "COD" as PayMethod, status: "EXPEDIEE" as OrderStatus, courier: "DHL Express", tracking: "DHL-77120945", date: "2026-08-21" },
-  { id: "CMD-2415", client: "Grace Mbala", city: "Douala", country: "Cameroun", items: [{ productId: "camille", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "LIVREE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-CM-4402", date: "2026-08-19" },
-  { id: "CMD-2414", client: "Aïcha Traoré", city: "Bamako", country: "Mali", items: [{ productId: "eloise", qty: 1 }], pay: "ECHOUE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-19" },
-  { id: "CMD-2413", client: "Nadège Kouassi", city: "Cotonou", country: "Bénin", items: [{ productId: "margaux", qty: 1 }], pay: "PAYE" as PayStatus, method: "CARTE" as PayMethod, status: "RETOURNEE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-BJ-1180", date: "2026-08-17" },
-];
-
-const banners = [
-  { title: "Nouveautés Automne — le cuir fauve", slot: "HERO" as const, target: "TOUTES" as const, start: "2026-08-01", end: "2026-09-15", active: true, image: unsplash("1637759292654-a12cb2be085e") },
-  { title: "Livraison offerte dès 75 000 FCFA", slot: "BANDEAU_PROMO" as const, target: "TOUTES" as const, start: "2026-08-10", end: "2026-08-31", active: true, image: unsplash("1594223274512-ad4803739b7c") },
-  { title: "-10% première commande · BIENVENUE10", slot: "POPUP" as const, target: "MOBILE" as const, start: "2026-08-15", end: "2026-09-30", active: false, image: unsplash("1575403538007-acb790100421") },
+const demoOrders = [
+  { id: "CMD-2418", client: "Awa Ndiaye", city: "Dakar", country: "Sénégal", items: [{ product: "tote-bag-coton-durable", color: "noir", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "EN_COURS_DE_LIVRAISON" as OrderStatus, courier: "Livreur interne · Moussa", tracking: "MW-DK-0091", date: "2026-08-22" },
+  { id: "CMD-2417", client: "Fatou Bamba", city: "Abidjan", country: "Côte d'Ivoire", items: [{ product: "sac-main-patchwork-pu", color: "bleu", qty: 1 }, { product: "tote-bag-freedom", color: "beige", qty: 1 }], pay: "EN_ATTENTE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-22" },
+  { id: "CMD-2416", client: "Marième Sow", city: "Dakar", country: "Sénégal", items: [{ product: "fourre-tout-oxford", color: "vert", qty: 2 }], pay: "PAYE" as PayStatus, method: "COD" as PayMethod, status: "EXPEDIEE" as OrderStatus, courier: "DHL Express", tracking: "DHL-77120945", date: "2026-08-21" },
+  { id: "CMD-2415", client: "Grace Mbala", city: "Douala", country: "Cameroun", items: [{ product: "fourre-tout-toile-epaisse", color: "kaki", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "LIVREE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-CM-4402", date: "2026-08-19" },
+  { id: "CMD-2414", client: "Aïcha Traoré", city: "Bamako", country: "Mali", items: [{ product: "tote-bag-velours-cotele", color: "noir-marron", qty: 1 }], pay: "ECHOUE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-19" },
+  { id: "CMD-2413", client: "Nadège Kouassi", city: "Cotonou", country: "Bénin", items: [{ product: "tote-bag-coton-durable", color: "beige", qty: 1 }], pay: "PAYE" as PayStatus, method: "CARTE" as PayMethod, status: "RETOURNEE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-BJ-1180", date: "2026-08-17" },
 ];
 
 const promos = [
-  { code: "BIENVENUE10", type: "POURCENTAGE" as const, value: 10, minCart: 0, used: 214, limit: 1000, end: "2026-12-31", active: true },
-  { code: "LIVRAISON0", type: "LIVRAISON_OFFERTE" as const, value: 0, minCart: 50000, used: 88, limit: 500, end: "2026-09-30", active: true },
-  { code: "RENTREE5000", type: "MONTANT_FIXE" as const, value: 5000, minCart: 60000, used: 47, limit: 300, end: "2026-09-15", active: false },
+  { code: "BIENVENUE10", type: "POURCENTAGE" as const, value: 10, minCart: 0, used: 0, limit: 1000, end: "2026-12-31", active: true },
+  { code: "LIVRAISON0", type: "LIVRAISON_OFFERTE" as const, value: 0, minCart: 50000, used: 0, limit: 500, end: "2026-09-30", active: true },
+  { code: "RENTREE5000", type: "MONTANT_FIXE" as const, value: 5000, minCart: 60000, used: 0, limit: 300, end: "2026-09-15", active: false },
 ];
 
-const reviews = [
-  { productId: "colette", author: "Awa N.", rating: 5, text: "Cuir superbe, finitions impeccables. Livrée à Dakar en 24h.", status: "EN_ATTENTE" as const },
-  { productId: "solene", author: "Marième S.", rating: 4, text: "Très jolie, un peu plus petite que prévu.", status: "EN_ATTENTE" as const },
-  { productId: "camille", author: "Grace M.", rating: 5, text: "Parfaite pour le quotidien, je recommande.", status: "PUBLIE" as const },
-  { productId: "aurore", author: "Anonyme", rating: 2, text: "Reçu avec du retard.", status: "REJETE" as const },
-];
+// ---------------------------------------------------------------------------
 
-const stockMoves = [
-  { productId: "colette", type: "VENTE" as const, qty: -1, reason: "Commande CMD-2418", author: "Système" },
-  { productId: "margaux", type: "ENTREE" as const, qty: 20, reason: "Réassort atelier", author: "A. Diallo" },
-  { productId: "noir-lucien", type: "AJUSTEMENT" as const, qty: -2, reason: "Casse (inventaire)", author: "A. Diallo" },
-  { productId: "aurore", type: "SORTIE" as const, qty: -3, reason: "Retour fournisseur", author: "M. Fall" },
-];
+/** Première photo disponible pour une clé de média, avec repli sur les visuels communs. */
+function firstImage(productSlug: string, key: string): string {
+  const media = productMedia(productSlug);
+  return media.images[key]?.[0] ?? media.images.generic?.[0] ?? Object.values(media.images).flat()[0];
+}
 
-async function main() {
+async function seedCatalog() {
   const categoryIds = new Map<string, string>();
-  for (const c of categories) {
-    const category = await prisma.category.upsert({
-      where: { name: c.name },
-      update: {},
-      create: { name: c.name, image: unsplash(c.img, 500, 620) },
-    });
-    categoryIds.set(c.name, category.id);
-  }
 
-  for (const p of products) {
-    await prisma.product.upsert({
-      where: { id: p.id },
-      update: {},
+  for (const category of categories) {
+    const row = await prisma.category.upsert({
+      where: { slug: category.slug },
+      update: { name: category.name, image: firstImage(category.cover.product, category.cover.key), position: category.position },
       create: {
-        id: p.id,
-        name: p.name,
-        collection: p.collection,
-        categoryId: categoryIds.get(p.category)!,
-        material: p.material,
-        color: p.color,
-        price: p.price,
-        compareAt: p.compareAt,
-        badge: p.badge,
-        rating: p.rating,
-        reviewsCount: p.reviewsCount,
-        image: p.image,
-        imageAlt: p.imageAlt,
-        imageHover: p.imageHover,
-        stock: { create: p.stock },
+        name: category.name,
+        slug: category.slug,
+        image: firstImage(category.cover.product, category.cover.key),
+        position: category.position,
       },
     });
+    categoryIds.set(category.name, row.id);
   }
 
-  for (const z of deliveryZones) {
-    await prisma.deliveryZone.upsert({
-      where: { city_country: { city: z.city, country: z.country } },
-      update: {},
-      create: z,
+  for (const product of products) {
+    const media = productMedia(product.slug);
+    const categoryId = categoryIds.get(product.category);
+    if (!categoryId) throw new Error(`Catégorie inconnue pour ${product.slug} : ${product.category}`);
+
+    const data = {
+      slug: product.slug,
+      name: product.name,
+      collection: product.collection,
+      categoryId,
+      material: product.material,
+      description: product.description,
+      care: product.care,
+      price: product.price,
+      compareAt: product.compareAt ?? null,
+      badge: (product.badge ?? null) as ProductBadge | null,
+      videoUrl: media.video,
+      closure: product.closure ?? null,
+      capacity: product.capacity ?? null,
+      widthTopMm: product.widthTopMm ?? null,
+      widthBottomMm: product.widthBottomMm ?? null,
+      heightMm: product.heightMm ?? null,
+      depthMm: product.depthMm ?? null,
+      handleDropMm: product.handleDropMm ?? null,
+      weightGrams: product.weightGrams ?? null,
+      features: product.features,
+    };
+
+    await prisma.product.upsert({
+      where: { id: product.id },
+      update: data,
+      create: { id: product.id, ...data },
+    });
+
+    // La galerie n'a pas de clé naturelle : on la reconstruit intégralement
+    // à chaque seed plutôt que de tenter un diff fragile.
+    await prisma.productImage.deleteMany({ where: { productId: product.id } });
+
+    for (const [index, variant] of product.variants.entries()) {
+      const row = await prisma.productVariant.upsert({
+        where: { productId_colorSlug: { productId: product.id, colorSlug: variant.colorSlug } },
+        update: {
+          sku: skuOf(product.slug, variant.colorSlug),
+          colorName: variant.colorName,
+          hex: variant.hex,
+          hexSecondary: variant.hexSecondary ?? null,
+          position: index,
+        },
+        create: {
+          productId: product.id,
+          sku: skuOf(product.slug, variant.colorSlug),
+          colorName: variant.colorName,
+          colorSlug: variant.colorSlug,
+          hex: variant.hex,
+          hexSecondary: variant.hexSecondary ?? null,
+          position: index,
+        },
+      });
+
+      await prisma.stock.upsert({
+        where: { variantId: row.id },
+        update: {},
+        create: { variantId: row.id, qty: INITIAL_STOCK.qty, threshold: INITIAL_STOCK.threshold },
+      });
+
+      const urls = media.images[variant.colorSlug] ?? [];
+      await prisma.productImage.createMany({
+        data: urls.map((url, position) => ({
+          productId: product.id,
+          variantId: row.id,
+          url,
+          alt: `${product.name} — coloris ${variant.colorName}`,
+          // Les visuels de variante passent devant les visuels communs.
+          position: index * 100 + position,
+        })),
+      });
+    }
+
+    // Visuels communs (packshots, fiche technique) : rattachés au produit seul.
+    await prisma.productImage.createMany({
+      data: (media.images.generic ?? []).map((url, position) => ({
+        productId: product.id,
+        variantId: null,
+        url,
+        alt: `${product.name} — présentation`,
+        position: 10_000 + position,
+      })),
+    });
+
+    // Les variantes retirées du catalogue sont désactivées, jamais supprimées :
+    // elles restent référencées par l'historique des commandes.
+    await prisma.productVariant.updateMany({
+      where: { productId: product.id, colorSlug: { notIn: product.variants.map((v) => v.colorSlug) } },
+      data: { active: false },
     });
   }
 
-  const demoPasswordHash = await bcrypt.hash("password123", 10);
+  // Idem au niveau produit : tout ce qui n'est plus au catalogue sort de la
+  // boutique sans casser les commandes passées.
+  await prisma.product.updateMany({
+    where: { id: { notIn: products.map((p) => p.id) } },
+    data: { active: false },
+  });
+}
+
+async function seedOperations() {
+  for (const zone of deliveryZones) {
+    await prisma.deliveryZone.upsert({
+      where: { city_country: { city: zone.city, country: zone.country } },
+      update: zone,
+      create: zone,
+    });
+  }
+
+  for (const promo of promos) {
+    await prisma.promo.upsert({
+      where: { code: promo.code },
+      update: { end: new Date(promo.end), active: promo.active },
+      create: { ...promo, end: new Date(promo.end) },
+    });
+  }
+}
+
+async function seedDemo() {
+  const passwordHash = await bcrypt.hash("password123", 10);
 
   await prisma.user.upsert({
     where: { phone: "+221709666259" },
     update: {},
-    create: { name: "Admin MW Store", phone: "+221709666259", email: "admin@mwstore.com", passwordHash: demoPasswordHash, role: "ADMIN" },
+    create: {
+      name: "Admin HUWSTORE",
+      phone: "+221709666259",
+      email: "admin@huwstore.com",
+      passwordHash,
+      role: "ADMIN",
+    },
   });
 
   const clientIds = new Map<string, string>();
-  for (const c of clients) {
+  for (const client of demoClients) {
     const user = await prisma.user.upsert({
-      where: { phone: c.phone },
-      update: {},
-      create: { name: c.name, phone: c.phone, email: c.email, city: c.city, passwordHash: demoPasswordHash, createdAt: new Date(c.since) },
-    });
-    clientIds.set(c.name, user.id);
-  }
-
-  for (const o of orders) {
-    const items = o.items.map((line) => {
-      const product = products.find((p) => p.id === line.productId)!;
-      return { productId: product.id, name: product.name, qty: line.qty, price: product.price };
-    });
-    const total = items.reduce((sum, i) => sum + i.price * i.qty, 0);
-
-    await prisma.order.upsert({
-      where: { id: o.id },
+      where: { phone: client.phone },
       update: {},
       create: {
-        id: o.id,
-        userId: clientIds.get(o.client),
-        client: o.client,
-        city: o.city,
-        country: o.country,
-        total,
-        pay: o.pay,
-        method: o.method,
-        status: o.status,
-        courier: o.courier,
-        tracking: o.tracking,
-        createdAt: new Date(o.date),
+        name: client.name,
+        phone: client.phone,
+        email: client.email,
+        city: client.city,
+        passwordHash,
+        createdAt: new Date(client.since),
+      },
+    });
+    clientIds.set(client.name, user.id);
+  }
+
+  const variants = await prisma.productVariant.findMany({ include: { product: { select: { name: true, price: true } } } });
+  const variantOf = (productId: string, colorSlug: string) => {
+    const found = variants.find((v) => v.productId === productId && v.colorSlug === colorSlug);
+    if (!found) throw new Error(`Variante introuvable : ${productId} / ${colorSlug}`);
+    return found;
+  };
+
+  for (const order of demoOrders) {
+    const items = order.items.map((line) => {
+      const variant = variantOf(line.product, line.color);
+      return {
+        productId: line.product,
+        variantId: variant.id,
+        name: variant.product.name,
+        color: variant.colorName,
+        qty: line.qty,
+        price: variant.product.price,
+      };
+    });
+
+    await prisma.order.upsert({
+      where: { id: order.id },
+      update: {},
+      create: {
+        id: order.id,
+        userId: clientIds.get(order.client),
+        client: order.client,
+        city: order.city,
+        country: order.country,
+        total: items.reduce((sum, i) => sum + i.price * i.qty, 0),
+        pay: order.pay,
+        method: order.method,
+        status: order.status,
+        courier: order.courier,
+        tracking: order.tracking,
+        createdAt: new Date(order.date),
         items: { create: items },
       },
     });
   }
 
-  for (const b of banners) {
-    await prisma.banner.create({ data: { ...b, start: new Date(b.start), end: new Date(b.end) } });
-  }
+  // Bannières : réécrites à chaque seed (pas de clé naturelle).
+  await prisma.banner.deleteMany();
+  await prisma.banner.createMany({
+    data: [
+      {
+        title: "Nouvelle collection — tote bags en toile",
+        slot: "HERO",
+        target: "TOUTES",
+        start: new Date("2026-08-01"),
+        end: new Date("2026-12-31"),
+        active: true,
+        image: firstImage("tote-bag-velours-cotele", "noir-marron"),
+      },
+      {
+        title: "Livraison offerte dès 75 000 FCFA",
+        slot: "BANDEAU_PROMO",
+        target: "TOUTES",
+        start: new Date("2026-08-01"),
+        end: new Date("2026-12-31"),
+        active: true,
+        image: firstImage("fourre-tout-toile-epaisse", "gris"),
+      },
+      {
+        title: "−10 % sur la première commande · BIENVENUE10",
+        slot: "POPUP",
+        target: "MOBILE",
+        start: new Date("2026-08-01"),
+        end: new Date("2026-12-31"),
+        active: false,
+        image: firstImage("sac-main-patchwork-pu", "rose"),
+      },
+    ],
+  });
+}
 
-  for (const p of promos) {
-    await prisma.promo.upsert({ where: { code: p.code }, update: {}, create: { ...p, end: new Date(p.end) } });
-  }
+async function main() {
+  await seedCatalog();
+  await seedOperations();
+  await seedDemo();
 
-  for (const r of reviews) {
-    await prisma.review.create({ data: r });
-  }
+  const [productCount, variantCount, imageCount] = await Promise.all([
+    prisma.product.count({ where: { active: true } }),
+    prisma.productVariant.count({ where: { active: true } }),
+    prisma.productImage.count(),
+  ]);
 
-  for (const m of stockMoves) {
-    await prisma.stockMovement.create({ data: m });
-  }
-
-  console.log("Base huwstore réinitialisée avec les données de la maquette.");
+  console.log(`Catalogue : ${productCount} produits, ${variantCount} variantes, ${imageCount} images.`);
+  console.log(`Médias    : ${usingCloudinary ? "Cloudinary" : "fichiers locaux (front/public/products)"}.`);
+  if (!usingCloudinary) console.log("Astuce    : lancez `npm run media:upload` pour basculer sur Cloudinary.");
 }
 
 main()
-  .catch((err) => {
-    console.error(err);
+  .catch((error) => {
+    console.error(error);
     process.exit(1);
   })
   .finally(() => prisma.$disconnect());

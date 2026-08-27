@@ -8,7 +8,13 @@ export const statsRepository = {
       select: { qty: true, price: true, product: { select: { category: { select: { name: true } } } } },
     }),
   pendingOrdersCount: () => prisma.order.count({ where: { status: "EN_PREPARATION" } }),
-  allStockLevels: () => prisma.stock.findMany({ select: { qty: true, threshold: true } }),
+  // Le stock vit désormais sur la déclinaison : on ne compte que celles
+  // qui appartiennent à un produit encore en vente.
+  allStockLevels: () =>
+    prisma.stock.findMany({
+      where: { variant: { active: true, product: { active: true } } },
+      select: { qty: true, threshold: true },
+    }),
   newClientsSince: (since: Date) => prisma.user.count({ where: { role: "CLIENT", createdAt: { gte: since } } }),
   revenueSince: (since: Date) => prisma.order.aggregate({ where: { createdAt: { gte: since } }, _sum: { total: true } }),
 };

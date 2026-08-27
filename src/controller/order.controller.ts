@@ -1,15 +1,16 @@
 import { getParam } from "../utils/getParam.js";
 import { StatusCodes } from "http-status-codes";
 import { orderService } from "../services/order.service.js";
-import { orderCreateSchema, orderUpdateSchema } from "../validators/order.validator.js";
+import { orderCreateSchema, orderUpdateSchema, orderListQuerySchema } from "../validators/order.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
 import { AppError } from "../utils/AppError.js";
 
 export const orderController = {
-  list: controllerWrapper(async (_req, res) => {
-    const orders = await orderService.list();
-    jsonResponse(res, StatusCodes.OK, "success", "Commandes récupérées.", orders);
+  list: controllerWrapper(async (req, res) => {
+    const query = orderListQuerySchema.parse(req.query);
+    const { items, meta } = await orderService.list(query);
+    jsonResponse(res, StatusCodes.OK, "success", "Commandes récupérées.", items, meta);
   }),
 
   mine: controllerWrapper(async (req, res) => {

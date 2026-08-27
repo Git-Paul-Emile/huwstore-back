@@ -5,6 +5,9 @@ import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 
 export const productRoutes = Router();
 
+// Déclarée AVANT "/:id", sinon Express interpréterait "facets" comme un id.
+productRoutes.get("/facets", productController.facets);
+
 productRoutes.get("/", productController.list);
 productRoutes.get("/:id", validateId, productController.getById);
 productRoutes.post("/", requireAuth, requireAdmin, productController.create);

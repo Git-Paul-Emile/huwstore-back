@@ -2,6 +2,30 @@ import type { Response } from "express";
 
 type JsonStatus = "success" | "error" | "not_found" | "fail" | "unauthorized";
 
-export function jsonResponse<T>(res: Response, httpStatus: number, status: JsonStatus, message: string, data: T | null = null) {
-  return res.status(httpStatus).json({ status, message, data });
+/** Métadonnées de pagination renvoyées avec toute collection paginée. */
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+/**
+ * Enveloppe de réponse unique pour toute l'API.
+ *
+ * `data` porte la ressource (ou la liste), `meta` porte la pagination.
+ * Les séparer évite au client de deviner si data est un tableau ou un objet
+ * paginé selon l'endpoint : la forme est toujours la même.
+ */
+export function jsonResponse<T>(
+  res: Response,
+  httpStatus: number,
+  status: JsonStatus,
+  message: string,
+  data: T | null = null,
+  meta?: PaginationMeta,
+) {
+  return res.status(httpStatus).json({ status, message, data, ...(meta ? { meta } : {}) });
 }

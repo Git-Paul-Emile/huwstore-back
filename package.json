@@ -10,7 +10,8 @@
     "migrate": "npx prisma migrate dev",
     "seed": "tsx prisma/seed.ts",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "media:upload": "tsx scripts/upload-media.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
@@ -40,5 +41,8 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.1"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

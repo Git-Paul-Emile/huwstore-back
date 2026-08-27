@@ -73,55 +73,123 @@ enum StockMoveType {
 model Category {
   id        String    @id @default(cuid())
   name      String    @unique
+  slug      String    @unique
   image     String
+  position  Int       @default(0)
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@index([position])
 }
 
+/// Fiche produit : l'identite commerciale et les caracteristiques communes a
+/// toutes les couleurs. Ce qui varie d'une couleur a l'autre (photos, stock)
+/// vit dans ProductVariant - un seul point de verite pour chaque donnee.
 model Product {
-  id           String          @id
+  id           String        @id
+  slug         String        @unique
   name         String
   collection   String
   categoryId   String
-  category     Category        @relation(fields: [categoryId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
   material     String
-  color        String
+  description  String        @db.Text
+  care         String        @db.Text
   price        Int
   compareAt    Int?
   badge        ProductBadge?
-  rating       Float           @default(0)
-  reviewsCount Int             @default(0)
-  image        String
-  imageAlt     String
-  imageHover   String
-  active       Boolean         @default(true)
-  stock        Stock?
-  orderItems   OrderItem[]
-  reviews      Review[]
-  stockMoves   StockMovement[]
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
+  rating       Float         @default(0)
+  reviewsCount Int           @default(0)
+  videoUrl     String?
+  active       Boolean       @default(true)
+
+  // Caracteristiques physiques. Stockees en millimetres et en grammes :
+  // des entiers, jamais de flottants, pour eviter toute erreur d'arrondi.
+  widthTopMm    Int?
+  widthBottomMm Int?
+  heightMm      Int?
+  depthMm       Int?
+  handleDropMm  Int?
+  weightGrams   Int?
+  closure       String?
+  capacity      String?
+  features      String[] @default([])
+
+  variants   ProductVariant[]
+  images     ProductImage[]
+  orderItems OrderItem[]
+  reviews    Review[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([categoryId])
+  @@index([active])
+}
+
+/// Declinaison couleur d'un produit : c'est l'unite reellement vendue et
+/// reellement stockee (le stock et les mouvements pointent ici, pas sur Product).
+model ProductVariant {
+  id           String  @id @default(cuid())
+  productId    String
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku          String  @unique
+  colorName    String
+  colorSlug    String
+  /// Pastille couleur affichee dans l'UI (couleur principale).
+  hex          String
+  /// Deuxieme couleur pour les modeles bi-matiere (pastille en degrade).
+  hexSecondary String?
+  position     Int     @default(0)
+  active       Boolean @default(true)
+
+  images     ProductImage[]
+  stock      Stock?
+  stockMoves StockMovement[]
+  orderItems OrderItem[]
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@unique([productId, colorSlug])
+  @@index([productId, position])
+}
+
+/// Galerie. Une image rattachee a une variante n'apparait que pour cette
+/// couleur ; variantId a null = visuel commun (packshot, fiche technique).
+model ProductImage {
+  id        String          @id @default(cuid())
+  productId String
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String
+  position  Int             @default(0)
+
+  @@index([productId, position])
+  @@index([variantId, position])
 }
 
 model Stock {
-  id        String   @id @default(cuid())
-  productId String   @unique
-  product   Product  @relation(fields: [productId], references: [id])
-  qty       Int      @default(0)
-  threshold Int      @default(5)
-  updatedAt DateTime @updatedAt
+  id        String         @id @default(cuid())
+  variantId String         @unique
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  qty       Int            @default(0)
+  threshold Int            @default(5)
+  updatedAt DateTime       @updatedAt
 }
 
 model StockMovement {
-  id        String        @id @default(cuid())
-  productId String
-  product   Product       @relation(fields: [productId], references: [id])
+  id        String         @id @default(cuid())
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
   type      StockMoveType
   qty       Int
   reason    String
   author    String
-  createdAt DateTime      @default(now())
+  createdAt DateTime       @default(now())
+
+  @@index([variantId, createdAt])
 }
 
 model DeliveryZone {
@@ -166,17 +234,29 @@ model Order {
   tracking  String?
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
+/// Ligne de commande. name, color et price sont fige(e)s a l'instant de l'achat :
+/// une hausse de tarif ou un changement de libelle ne doit jamais reecrire
+/// l'historique des commandes deja passees.
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String          @id @default(cuid())
   orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
+  order     Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
   name      String
+  color     String?
   qty       Int
   price     Int
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Banner {
@@ -205,7 +285,7 @@ model Promo {
 model Review {
   id        String       @id @default(cuid())
   productId String
-  product   Product      @relation(fields: [productId], references: [id])
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId    String?
   user      User?        @relation(fields: [userId], references: [id])
   author    String
@@ -213,4 +293,6 @@ model Review {
   text      String       @db.Text
   status    ReviewStatus @default(EN_ATTENTE)
   createdAt DateTime     @default(now())
+
+  @@index([productId, status])
 }

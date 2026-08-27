@@ -1,5 +1,5 @@
-import { getParam } from "../utils/getParam.js";
 import { StatusCodes } from "http-status-codes";
+import { getParam } from "../utils/getParam.js";
 import { productService } from "../services/product.service.js";
 import { productSchema, productUpdateSchema, productListQuerySchema } from "../validators/product.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
@@ -8,8 +8,14 @@ import { jsonResponse } from "../utils/jsonResponse.js";
 export const productController = {
   list: controllerWrapper(async (req, res) => {
     const query = productListQuerySchema.parse(req.query);
-    const products = await productService.list(query);
-    jsonResponse(res, StatusCodes.OK, "success", "Produits récupérés.", products);
+    const { items, meta } = await productService.list(query);
+    jsonResponse(res, StatusCodes.OK, "success", "Produits récupérés.", items, meta);
+  }),
+
+  /** Valeurs de filtre réellement présentes en base (matières, couleurs). */
+  facets: controllerWrapper(async (_req, res) => {
+    const facets = await productService.facets();
+    jsonResponse(res, StatusCodes.OK, "success", "Facettes récupérées.", facets);
   }),
 
   getById: controllerWrapper(async (req, res) => {
@@ -31,6 +37,6 @@ export const productController = {
 
   remove: controllerWrapper(async (req, res) => {
     await productService.remove(getParam(req, "id"));
-    jsonResponse(res, StatusCodes.OK, "success", "Produit supprimé.");
+    jsonResponse(res, StatusCodes.OK, "success", "Produit désactivé.");
   }),
 };

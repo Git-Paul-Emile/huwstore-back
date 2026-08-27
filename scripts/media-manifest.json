@@ -1,0 +1,70 @@
+{
+  "products": [
+    {
+      "slug": "tote-bag-coton-durable",
+      "folder": "Nouveau dossier",
+      "video": "WhatsApp Video 2026-08-24 at 22.57.33.mp4",
+      "images": {
+        "noir": ["WhatsApp Image 2026-08-24 at 22.57.24.jpeg"],
+        "marron": ["WhatsApp Image 2026-08-244 at 422.57.24.jpeg"],
+        "beige": ["WhatsApp Image 2026-08-24 at 22.57.26.jpeg", "WhatsApp Image 20l26-08-24 at 22.57.24.jpeg"],
+        "_generic": ["WhatsApp Image 2026-08-244 at 22.57.24.jpeg"]
+      }
+    },
+    {
+      "slug": "sac-main-patchwork-pu",
+      "folder": "Nouveau dossier (2)",
+      "video": null,
+      "images": {
+        "bleu": ["WhatsApp Image 2026-08-25 at 10.12.07.jpeg", "lWhatsApp Image 2026-08-25 at 10.12.09.jpeg"],
+        "jaune": ["WhatsApp Image 2026-08-25 at 10.12.08.jpeg"],
+        "rose": ["WhatsApp Image 2026-0l8-25 at 10.12.08.jpeg"],
+        "_generic": ["^pWhatsApp Image 2026-08-25 at 10.12.08.jpeg", "WhatsApp Image 2026-08-25 at 10.12.09.jpeg"]
+      }
+    },
+    {
+      "slug": "fourre-tout-oxford",
+      "folder": "Nouveau dossier (3)",
+      "video": null,
+      "images": {
+        "noir": ["WhatsApp Image 2026-08-25 at 11.50.03.jpeg", "dWhatsApp Image 2026-08-25 at 11.50.05.jpeg"],
+        "vert": ["WhatsApp Image 2026-08-25 at 11.50.05.jpeg", "pWhatsApp Image 2026-08-25 at 11.50.03.jpeg"],
+        "beige": ["eWhatsApp Image 2026-08-25 at 11.50.03.jpeg"],
+        "violet": ["eWhatsApp Image 2026-08-25 at 11.50.04.jpeg"],
+        "_generic": ["WhatsApp Image 2026-08-25 at 11.50.06.jpeg"]
+      }
+    },
+    {
+      "slug": "tote-bag-freedom",
+      "folder": "Nouveau dossier (4)",
+      "video": null,
+      "images": {
+        "noir": ["WhatsApp Image 2026-08-25 at 13.10.13.jpeg", "vWhatsApp Image 2026-08-25 at 13.10.14.jpeg"],
+        "beige": ["eWhatsApp Image 2026-08-25 at 13.10.13.jpeg", "xWhatsApp Image 2026-08-25 at 13.10.14.jpeg"],
+        "_generic": ["dWhatsApp Image 2026-08-25 at 13.10.13.jpeg"]
+      }
+    },
+    {
+      "slug": "fourre-tout-toile-epaisse",
+      "folder": "Nouveau dossier (5)",
+      "video": "WhatsApp Video 2026-08-25 at 13.51.57.mp4",
+      "images": {
+        "noir": ["jWhatsApp Image 2026-08-25 at 13.51.48.jpeg"],
+        "gris": ["WhatsApp Image 2026-08-25 at 13.51.48.jpeg", "jjWhatsApp Image 2026-08-25 at 13.51.48.jpeg"],
+        "kaki": ["tWhatsApp Image 2026-08-25 at 13.51.49.jpeg", "hWhatsApp Image 2026-08-25 at 13.51.49.jpeg"],
+        "_generic": ["kWhatsApp Image 2026-08-25 at 13.51.49.jpeg"]
+      }
+    },
+    {
+      "slug": "tote-bag-velours-cotele",
+      "folder": "Nouveau dossier (6)",
+      "video": null,
+      "images": {
+        "noir-marron": ["WhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
+        "noir-blanc-casse": ["lWhatsApp Image 2026-08-25 at 15.42.47.jpeg", "oWhatsApp Image 2026-08-25 at 15.42.48.jpeg"],
+        "blanc-casse-marron": ["llWhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
+        "_generic": ["pWhatsApp Image 2026-08-25 at 15.42.48.jpeg", "WhatsApp Image 2026-08-25 at 15.42.49.jpeg"]
+      }
+    }
+  ]
+}

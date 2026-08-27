@@ -1,5 +1,4 @@
 import { stockRepository } from "../repositories/stock.repository.js";
-import { productRepository } from "../repositories/product.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { stockMoveTypeMap } from "../utils/enumMaps.js";
 import type { stockAdjustSchema } from "../validators/stock.validator.js";
@@ -8,37 +7,65 @@ import type { z } from "zod";
 export const stockService = {
   async listStock() {
     const rows = await stockRepository.findAllStock();
-    return rows.map((s) => ({ productId: s.productId, product: s.product.name, qty: s.qty, threshold: s.threshold }));
+    return rows.map((row) => ({
+      variantId: row.variantId,
+      sku: row.variant.sku,
+      productId: row.variant.product.id,
+      product: row.variant.product.name,
+      color: row.variant.colorName,
+      qty: row.qty,
+      threshold: row.threshold,
+      low: row.qty <= row.threshold,
+    }));
   },
 
   async listMovements() {
     const rows = await stockRepository.findMovements();
-    return rows.map((m) => ({
-      id: m.id,
-      product: m.product.name,
-      type: stockMoveTypeMap.label(m.type),
-      qty: m.qty,
-      reason: m.reason,
-      author: m.author,
-      date: m.createdAt,
+    return rows.map((movement) => ({
+      id: movement.id,
+      variantId: movement.variantId,
+      product: movement.variant.product.name,
+      color: movement.variant.colorName,
+      type: stockMoveTypeMap.label(movement.type),
+      qty: movement.qty,
+      reason: movement.reason,
+      author: movement.author,
+      date: movement.createdAt,
     }));
   },
 
   async adjust(input: z.infer<typeof stockAdjustSchema>) {
-    const product = await productRepository.findById(input.productId);
-    if (!product) throw AppError.notFound("Produit introuvable.");
+    const variant = await stockRepository.findVariantById(input.variantId);
+    if (!variant) throw AppError.notFound("Déclinaison introuvable.");
 
-    const [movement] = await Promise.all([
-      stockRepository.createMovement({
-        product: { connect: { id: input.productId } },
+    // Un stock ne peut pas devenir négatif : on refuse plutôt que de laisser
+    // la base enregistrer un état impossible.
+    const current = variant.stock?.qty ?? 0;
+    if (current + input.qty < 0) {
+      throw AppError.badRequest(`Stock insuffisant : ${current} en stock, retrait de ${Math.abs(input.qty)} demandé.`);
+    }
+
+    const { movement, stock } = await stockRepository.applyMovement(
+      {
+        variantId: input.variantId,
         type: stockMoveTypeMap.fromLabel(input.type),
         qty: input.qty,
         reason: input.reason,
         author: input.author,
-      }),
-      stockRepository.incrementStockQty(input.productId, input.qty),
-    ]);
+      },
+      variant.stock?.threshold ?? 5,
+    );
 
-    return { id: movement.id, product: product.name, type: input.type, qty: input.qty, reason: input.reason, author: input.author };
+    return {
+      id: movement.id,
+      variantId: input.variantId,
+      product: variant.product.name,
+      color: variant.colorName,
+      type: input.type,
+      qty: input.qty,
+      reason: input.reason,
+      author: input.author,
+      newQty: stock.qty,
+    };
   },
 };
