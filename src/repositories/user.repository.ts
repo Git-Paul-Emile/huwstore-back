@@ -4,7 +4,9 @@ import type { Prisma } from "@prisma/client";
 export const userRepository = {
   findByPhone: (phone: string) => prisma.user.findUnique({ where: { phone } }),
   findById: (id: string) => prisma.user.findUnique({ where: { id } }),
+  findByEmail: (email: string) => prisma.user.findUnique({ where: { email } }),
   create: (data: Prisma.UserCreateInput) => prisma.user.create({ data }),
+  update: (id: string, data: Prisma.UserUpdateInput) => prisma.user.update({ where: { id }, data }),
   findClients: () =>
     prisma.user.findMany({
       where: { role: "CLIENT" },

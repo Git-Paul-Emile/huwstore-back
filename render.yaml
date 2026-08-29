@@ -10,6 +10,10 @@ services:
     envVars:
       - key: PORT
         value: 8000
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
       - key: DATABASE_URL
         sync: false
       - key: ACCESS_TOKEN_SECRET
@@ -23,4 +27,10 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM_EMAIL
+        sync: false
+      - key: SHOP_ADMIN_EMAIL
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: ADMIN_PASSWORD
         sync: false

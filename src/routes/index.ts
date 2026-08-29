@@ -7,9 +7,14 @@ import { orderRoutes } from "./order.routes.js";
 import { clientRoutes } from "./client.routes.js";
 import { bannerRoutes } from "./banner.routes.js";
 import { promoRoutes } from "./promo.routes.js";
-import { reviewRoutes } from "./review.routes.js";
+import { testimonialRoutes } from "./testimonial.routes.js";
 import { stockRoutes } from "./stock.routes.js";
 import { statsRoutes } from "./stats.routes.js";
+import { addressRoutes } from "./address.routes.js";
+import { wishlistRoutes } from "./wishlist.routes.js";
+import { settingRoutes } from "./setting.routes.js";
+import { mediaRoutes } from "./media.routes.js";
+import { feedbackRoutes } from "./feedback.routes.js";
 
 export const router = Router();
 
@@ -21,6 +26,11 @@ router.use("/orders", orderRoutes);
 router.use("/clients", clientRoutes);
 router.use("/banners", bannerRoutes);
 router.use("/promos", promoRoutes);
-router.use("/reviews", reviewRoutes);
+router.use("/testimonials", testimonialRoutes);
 router.use("/stock", stockRoutes);
 router.use("/stats", statsRoutes);
+router.use("/addresses", addressRoutes);
+router.use("/wishlist", wishlistRoutes);
+router.use("/settings", settingRoutes);
+router.use("/media", mediaRoutes);
+router.use("/feedback", feedbackRoutes);

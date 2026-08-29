@@ -37,6 +37,38 @@ export const statsService = {
     return [...totals.entries()].map(([name, value]) => ({ name, value }));
   },
 
+  /**
+   * « Sacs les plus vendus » (recueil de besoins, Q70). Fenetre glissante de
+   * 90 jours : assez large pour lisser les creux, assez courte pour rester
+   * un classement du moment et non un cumul depuis l'ouverture.
+   */
+  async topProducts(days = 90, take = 8) {
+    const since = new Date(Date.now() - days * DAY_MS);
+    const grouped = await statsRepository.topProductsSince(since, take);
+    if (grouped.length === 0) return [];
+
+    const products = await statsRepository.productsByIds(grouped.map((row) => row.productId));
+    const byId = new Map(products.map((product) => [product.id, product]));
+
+    // On conserve l'ordre du groupBy : c'est lui qui porte le classement.
+    return grouped.flatMap((row) => {
+      const product = byId.get(row.productId);
+      if (!product) return [];
+      const qty = row._sum.qty ?? 0;
+      return [
+        {
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          category: product.category.name,
+          image: product.images[0]?.url ?? null,
+          qtySold: qty,
+          revenue: qty * product.price,
+        },
+      ];
+    });
+  },
+
   async dashboard() {
     const since = new Date(Date.now() - DAY_MS);
     const [revenue, pending, stockLevels, newClients] = await Promise.all([

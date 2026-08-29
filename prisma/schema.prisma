@@ -24,11 +24,9 @@ enum PayStatus {
   ECHOUE
 }
 
+/// Un seul moyen d'encaissement : a la livraison, en especes.
 enum PayMethod {
-  WAVE
-  ORANGE_MONEY
   COD
-  CARTE
 }
 
 enum OrderStatus {
@@ -37,6 +35,11 @@ enum OrderStatus {
   EN_COURS_DE_LIVRAISON
   LIVREE
   RETOURNEE
+}
+
+enum DeliveryMode {
+  DOMICILE
+  POINT_RELAIS
 }
 
 enum BannerSlot {
@@ -57,12 +60,6 @@ enum PromoType {
   LIVRAISON_OFFERTE
 }
 
-enum ReviewStatus {
-  EN_ATTENTE
-  PUBLIE
-  REJETE
-}
-
 enum StockMoveType {
   ENTREE
   SORTIE
@@ -75,6 +72,9 @@ model Category {
   name      String    @unique
   slug      String    @unique
   image     String
+  /// Resume affiche sous le nom sur la page d'accueil. Facultatif : une
+  /// categorie sans resume retombe sur son nombre de produits.
+  description String?
   position  Int       @default(0)
   products  Product[]
   createdAt DateTime  @default(now())
@@ -99,8 +99,6 @@ model Product {
   price        Int
   compareAt    Int?
   badge        ProductBadge?
-  rating       Float         @default(0)
-  reviewsCount Int           @default(0)
   videoUrl     String?
   active       Boolean       @default(true)
 
@@ -116,10 +114,15 @@ model Product {
   capacity      String?
   features      String[] @default([])
 
+  /// Petit accessoire livre d'office avec le sac (ex. "Livre avec une pochette
+  /// assortie"). Facultatif : la plupart des modeles n'en ont pas. Ce n'est pas
+  /// un lot a composer par la cliente, juste ce qui est deja dans la boite.
+  includedAccessory String?
+
   variants   ProductVariant[]
   images     ProductImage[]
   orderItems OrderItem[]
-  reviews    Review[]
+  wishlisted WishlistItem[]
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -200,6 +203,9 @@ model DeliveryZone {
   freeFrom Int
   delay    String
   relay    Boolean @default(false)
+  active   Boolean @default(true)
+
+  orders Order[]
 
   @@unique([city, country])
 }
@@ -213,30 +219,99 @@ model User {
   role         Role     @default(CLIENT)
   city         String?
   orders       Order[]
-  reviews      Review[]
+  addresses    Address[]
+  wishlist     WishlistItem[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
 
+/// Commande. Le montant n'est jamais recu du navigateur : subtotal, shippingFee
+/// et discount sont recalcules par le serveur, et total en est la somme. Les
+/// garder tous les quatre permet de rejouer le calcul d'une commande ancienne
+/// meme si les frais de zone ou le code promo ont change depuis.
 model Order {
-  id        String      @id @default(cuid())
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id])
-  client    String
-  city      String
-  country   String
-  items     OrderItem[]
-  total     Int
-  pay       PayStatus   @default(EN_ATTENTE)
-  method    PayMethod
-  status    OrderStatus @default(EN_PREPARATION)
-  courier   String?
-  tracking  String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
+  id     String @id @default(cuid())
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id])
+
+  /// Jeton de lecture remis a l'acheteur au moment de la commande. Il autorise
+  /// la relecture du recu et le telechargement de la facture SANS compte : la
+  /// commande en invite devient possible sans pour autant ouvrir les commandes
+  /// a quiconque devine un identifiant.
+  publicToken String @unique @default(cuid())
+
+  // Coordonnees figees a l'instant de l'achat : le client peut modifier son
+  // carnet d'adresses plus tard, la commande deja passee ne doit pas bouger.
+  client      String
+  phone       String
+  email       String?
+  addressLine String
+  landmark    String?
+  city        String
+  country     String
+
+  deliveryMode   DeliveryMode  @default(DOMICILE)
+  deliveryZoneId String?
+  deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+
+  items OrderItem[]
+
+  subtotal    Int
+  shippingFee Int     @default(0)
+  discount    Int     @default(0)
+  promoCode   String?
+  total       Int
+
+  pay      PayStatus   @default(EN_ATTENTE)
+  method   PayMethod   @default(COD)
+  status   OrderStatus @default(EN_PREPARATION)
+  courier  String?
+  tracking String?
+  note     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([createdAt])
+  @@index([deliveryZoneId])
+}
+
+/// Carnet d'adresses du client. Une seule adresse peut porter isDefault :
+/// la contrainte est tenue par le service, pas par la base (Postgres ne sait
+/// pas exprimer "un seul true par userId" sans index partiel).
+model Address {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  label     String
+  fullName  String
+  phone     String
+  line      String
+  landmark  String?
+  city      String
+  country   String  @default("Senegal")
+  isDefault Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// Favoris rattaches au compte, et non au navigateur : ils suivent la cliente
+/// d'un appareil a l'autre. Les visiteurs non connectes gardent une liste locale.
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
 }
 
 /// Ligne de commande. name, color et price sont fige(e)s a l'instant de l'achat :
@@ -259,15 +334,54 @@ model OrderItem {
   @@index([productId])
 }
 
+/// Visuel editorial pilote depuis le back-office : slides du carrousel
+/// d'accueil, bandeau promotionnel, pop-up. Rien n'est code en dur cote front.
 model Banner {
-  id     String       @id @default(cuid())
-  title  String
-  slot   BannerSlot
-  target BannerTarget @default(TOUTES)
-  start  DateTime
-  end    DateTime
-  active Boolean      @default(true)
-  image  String
+  id       String       @id @default(cuid())
+  title    String
+  /// Deuxieme ligne du titre, affichee en italique sous le titre principal.
+  subtitle String?
+  text     String?
+  ctaLabel String?
+  /// Destination du bouton, ex. /boutique ou /boutique/mini-sacs-a-main.
+  ctaHref  String?
+  slot     BannerSlot
+  target   BannerTarget @default(TOUTES)
+  /// Cadrage de la photo quand elle est rognee : "center", "top" ou "bottom".
+  focus    String       @default("center")
+  position Int          @default(0)
+  start    DateTime
+  end      DateTime
+  active   Boolean      @default(true)
+  image    String
+
+  @@index([slot, active, position])
+}
+
+/// Parametres de la boutique, edites depuis le back-office et lus par la
+/// vitrine (pied de page, widget WhatsApp, e-mails). Une seule ligne, dont
+/// l'identifiant est fige : la table ne peut pas porter deux configurations
+/// concurrentes.
+model Setting {
+  id           String   @id @default("shop")
+  shopName     String   @default("HUWSTORE")
+  phone        String   @default("709666259")
+  /// Numero au format international, sans +, pour les liens wa.me.
+  whatsapp     String   @default("221709666259")
+  email        String?
+  city         String   @default("Dakar")
+  country      String   @default("Senegal")
+  /// Adresse postale imprimee sur la facture. Facultative.
+  addressLine  String?
+  /// Numero d'identification fiscale, imprime sur la facture quand la boutique
+  /// est enregistree. Vide, la facture porte la mention "TVA non applicable".
+  ninea        String?
+  instagramUrl String?
+  facebookUrl  String?
+  tiktokUrl    String?
+  /// Bandeau libre affiche en haut de la vitrine. Vide = pas de bandeau.
+  announcement String?
+  updatedAt    DateTime @updatedAt
 }
 
 model Promo {
@@ -282,17 +396,34 @@ model Promo {
   active  Boolean   @default(true)
 }
 
-model Review {
-  id        String       @id @default(cuid())
-  productId String
-  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId    String?
-  user      User?        @relation(fields: [userId], references: [id])
+/// Temoignage client mis en avant sur la page d'accueil ("Les retours de nos
+/// clientes"). Contenu editorial saisi et publie depuis le back-office :
+/// la boutique choisit ce qu'elle met en avant, rien n'est depose par un visiteur.
+model Testimonial {
+  id        String   @id @default(cuid())
   author    String
-  rating    Int
-  text      String       @db.Text
-  status    ReviewStatus @default(EN_ATTENTE)
-  createdAt DateTime     @default(now())
+  role      String
+  text      String   @db.Text
+  avatar    String?
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@index([productId, status])
+  @@index([active, position])
+}
+
+/// Avis libre depose par une visiteuse sur le site lui-meme (pas sur un
+/// produit precis) : suggestion, remarque, satisfaction generale. Lu et traite
+/// depuis le back-office, jamais publie automatiquement sur la vitrine.
+model Feedback {
+  id        String   @id @default(cuid())
+  name      String?
+  phone     String?
+  email     String?
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
 }

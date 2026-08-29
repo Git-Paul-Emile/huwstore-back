@@ -14,10 +14,10 @@
  * Les URLs des médias viennent de prisma/media.ts : Cloudinary si
  * `npm run media:upload` a déjà tourné, sinon les fichiers locaux du front.
  */
-import { PrismaClient, type ProductBadge, type PayMethod, type PayStatus, type OrderStatus } from "@prisma/client";
+import { PrismaClient, type ProductBadge } from "@prisma/client";
 import bcrypt from "bcrypt";
 import { categories, products, skuOf, INITIAL_STOCK } from "./catalog.js";
-import { productMedia, usingCloudinary } from "./media.js";
+import { categoryImage, productMedia, usingCloudinary } from "./media.js";
 
 const prisma = new PrismaClient();
 
@@ -27,33 +27,22 @@ const prisma = new PrismaClient();
 // alimenter le tableau de bord et les statistiques de l'admin.
 // ---------------------------------------------------------------------------
 
+/**
+ * Zones de livraison. Le recueil de besoins est explicite : la boutique livre
+ * « tout le Sénégal », en 24 h sur Dakar et 72 h en région (Q24, Q36).
+ * Les frais et le seuil de gratuité se règlent ensuite depuis le back-office.
+ */
 const deliveryZones = [
-  { city: "Dakar", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 – 48 h", relay: true },
-  { city: "Abidjan", country: "Côte d'Ivoire", fee: 3000, freeFrom: 90000, delay: "2 – 4 jours", relay: true },
-  { city: "Douala", country: "Cameroun", fee: 3500, freeFrom: 90000, delay: "3 – 5 jours", relay: true },
-  { city: "Yaoundé", country: "Cameroun", fee: 4000, freeFrom: 90000, delay: "3 – 5 jours", relay: false },
-  { city: "Brazzaville", country: "Congo", fee: 4500, freeFrom: 100000, delay: "4 – 6 jours", relay: false },
-  { city: "Cotonou", country: "Bénin", fee: 3500, freeFrom: 90000, delay: "3 – 5 jours", relay: true },
-  { city: "Lomé", country: "Togo", fee: 3500, freeFrom: 90000, delay: "3 – 5 jours", relay: false },
-  { city: "Bamako", country: "Mali", fee: 4000, freeFrom: 95000, delay: "4 – 6 jours", relay: false },
-];
-
-const demoClients = [
-  { name: "Awa Ndiaye", phone: "+221778124490", email: "awa.n@mail.com", city: "Dakar", since: "2024-11-03" },
-  { name: "Fatou Bamba", phone: "+225074522180", email: "fatou.b@mail.com", city: "Abidjan", since: "2025-02-19" },
-  { name: "Marième Sow", phone: "+221763301107", email: "marieme@mail.com", city: "Dakar", since: "2025-01-22" },
-  { name: "Grace Mbala", phone: "+237699401233", email: "grace.m@mail.com", city: "Douala", since: "2025-06-08" },
-  { name: "Aïcha Traoré", phone: "+223762188400", email: "aicha.t@mail.com", city: "Bamako", since: "2026-08-14" },
-  { name: "Nadège Kouassi", phone: "+229975530210", email: "nadege@mail.com", city: "Cotonou", since: "2024-09-30" },
-];
-
-const demoOrders = [
-  { id: "CMD-2418", client: "Awa Ndiaye", city: "Dakar", country: "Sénégal", items: [{ product: "tote-bag-coton-durable", color: "noir", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "EN_COURS_DE_LIVRAISON" as OrderStatus, courier: "Livreur interne · Moussa", tracking: "MW-DK-0091", date: "2026-08-22" },
-  { id: "CMD-2417", client: "Fatou Bamba", city: "Abidjan", country: "Côte d'Ivoire", items: [{ product: "sac-main-patchwork-pu", color: "bleu", qty: 1 }, { product: "tote-bag-freedom", color: "beige", qty: 1 }], pay: "EN_ATTENTE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-22" },
-  { id: "CMD-2416", client: "Marième Sow", city: "Dakar", country: "Sénégal", items: [{ product: "fourre-tout-oxford", color: "vert", qty: 2 }], pay: "PAYE" as PayStatus, method: "COD" as PayMethod, status: "EXPEDIEE" as OrderStatus, courier: "DHL Express", tracking: "DHL-77120945", date: "2026-08-21" },
-  { id: "CMD-2415", client: "Grace Mbala", city: "Douala", country: "Cameroun", items: [{ product: "fourre-tout-toile-epaisse", color: "kaki", qty: 1 }], pay: "PAYE" as PayStatus, method: "WAVE" as PayMethod, status: "LIVREE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-CM-4402", date: "2026-08-19" },
-  { id: "CMD-2414", client: "Aïcha Traoré", city: "Bamako", country: "Mali", items: [{ product: "tote-bag-velours-cotele", color: "noir-marron", qty: 1 }], pay: "ECHOUE" as PayStatus, method: "ORANGE_MONEY" as PayMethod, status: "EN_PREPARATION" as OrderStatus, courier: null, tracking: null, date: "2026-08-19" },
-  { id: "CMD-2413", client: "Nadège Kouassi", city: "Cotonou", country: "Bénin", items: [{ product: "tote-bag-coton-durable", color: "beige", qty: 1 }], pay: "PAYE" as PayStatus, method: "CARTE" as PayMethod, status: "RETOURNEE" as OrderStatus, courier: "Prestataire · Chronopost", tracking: "CH-BJ-1180", date: "2026-08-17" },
+  { city: "Dakar", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: true, active: true },
+  { city: "Pikine", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: true, active: true },
+  { city: "Guédiawaye", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: false, active: true },
+  { city: "Rufisque", country: "Sénégal", fee: 2500, freeFrom: 75000, delay: "24 – 48 h", relay: false, active: true },
+  { city: "Thiès", country: "Sénégal", fee: 3000, freeFrom: 90000, delay: "72 h", relay: true, active: true },
+  { city: "Mbour / Saly", country: "Sénégal", fee: 3000, freeFrom: 90000, delay: "72 h", relay: false, active: true },
+  { city: "Touba", country: "Sénégal", fee: 3500, freeFrom: 90000, delay: "72 h", relay: false, active: true },
+  { city: "Saint-Louis", country: "Sénégal", fee: 3500, freeFrom: 90000, delay: "72 h", relay: false, active: true },
+  { city: "Kaolack", country: "Sénégal", fee: 3500, freeFrom: 90000, delay: "72 h", relay: false, active: true },
+  { city: "Ziguinchor", country: "Sénégal", fee: 4000, freeFrom: 100000, delay: "72 h", relay: false, active: true },
 ];
 
 const promos = [
@@ -64,23 +53,33 @@ const promos = [
 
 // ---------------------------------------------------------------------------
 
-/** Première photo disponible pour une clé de média, avec repli sur les visuels communs. */
-function firstImage(productSlug: string, key: string): string {
-  const media = productMedia(productSlug);
-  return media.images[key]?.[0] ?? media.images.generic?.[0] ?? Object.values(media.images).flat()[0];
-}
+/**
+ * Un visuel encore servi par le front (chemin relatif) est celui livre avec le
+ * code ; une adresse absolue signifie que la boutique a televerse le sien
+ * depuis le back-office, et le seed ne doit alors plus y toucher.
+ */
+const visuelLivreAvecLeCode = (url: string) => url.startsWith("/");
 
 async function seedCatalog() {
   const categoryIds = new Map<string, string>();
 
   for (const category of categories) {
+    // Le nom et l'ordre viennent du catalogue : ils decrivent la structure de
+    // la boutique. Le visuel et le resume, eux, se modifient depuis le
+    // back-office : le seed les pose une premiere fois puis s'efface, sinon
+    // chaque `npm run seed` effacerait le travail de la boutique.
+    const existante = await prisma.category.findUnique({ where: { slug: category.slug } });
+    const image =
+      existante && !visuelLivreAvecLeCode(existante.image) ? existante.image : categoryImage(category.slug);
+
     const row = await prisma.category.upsert({
       where: { slug: category.slug },
-      update: { name: category.name, image: firstImage(category.cover.product, category.cover.key), position: category.position },
+      update: { name: category.name, image, position: category.position },
       create: {
         name: category.name,
         slug: category.slug,
-        image: firstImage(category.cover.product, category.cover.key),
+        image,
+        description: category.description,
         position: category.position,
       },
     });
@@ -158,7 +157,7 @@ async function seedCatalog() {
           productId: product.id,
           variantId: row.id,
           url,
-          alt: `${product.name} — coloris ${variant.colorName}`,
+          alt: `${product.name} - coloris ${variant.colorName}`,
           // Les visuels de variante passent devant les visuels communs.
           position: index * 100 + position,
         })),
@@ -171,7 +170,7 @@ async function seedCatalog() {
         productId: product.id,
         variantId: null,
         url,
-        alt: `${product.name} — présentation`,
+        alt: `${product.name} - présentation`,
         position: 10_000 + position,
       })),
     });
@@ -210,126 +209,137 @@ async function seedOperations() {
   }
 }
 
-async function seedDemo() {
-  const passwordHash = await bcrypt.hash("password123", 10);
+/**
+ * Amorçage du back-office.
+ *
+ * On n'écrit ici QUE des données réelles et nécessaires au premier démarrage :
+ * le compte administrateur, la configuration de la boutique et les visuels
+ * d'accueil par défaut. Aucune fausse cliente, aucune fausse commande, aucun
+ * faux témoignage : des chiffres inventés dans le tableau de bord donneraient
+ * une image fausse de l'activité, et un avis inventé serait un faux avis.
+ *
+ * Les témoignages et les vraies ventes se créent depuis l'interface.
+ */
+async function seedBackOffice() {
+  // Mot de passe administrateur : imposé par variable d'environnement. En
+  // développement seulement, un mot de passe de repli est accepté - mais il
+  // est annoncé bruyamment pour qu'il ne parte jamais en production.
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword && process.env.NODE_ENV === "production") {
+    throw new Error("ADMIN_PASSWORD est obligatoire pour amorcer la base en production.");
+  }
+  if (!adminPassword) {
+    console.warn("ADMIN_PASSWORD absente : mot de passe de développement « huwstore2026 » utilisé.");
+  }
+  const passwordHash = await bcrypt.hash(adminPassword ?? "huwstore2026", 10);
 
+  // Le numéro est stocké sous sa forme compacte à 9 chiffres, exactement comme
+  // le validateur le normalise à la connexion - sinon le compte serait
+  // introuvable au moment de se connecter.
   await prisma.user.upsert({
-    where: { phone: "+221709666259" },
-    update: {},
+    where: { phone: "709666259" },
+    update: { role: "ADMIN" },
     create: {
-      name: "Admin HUWSTORE",
-      phone: "+221709666259",
-      email: "admin@huwstore.com",
+      name: "Administration HUWSTORE",
+      phone: "709666259",
+      email: process.env.SHOP_ADMIN_EMAIL ?? null,
       passwordHash,
       role: "ADMIN",
     },
   });
 
-  const clientIds = new Map<string, string>();
-  for (const client of demoClients) {
-    const user = await prisma.user.upsert({
-      where: { phone: client.phone },
-      update: {},
-      create: {
-        name: client.name,
-        phone: client.phone,
-        email: client.email,
-        city: client.city,
-        passwordHash,
-        createdAt: new Date(client.since),
-      },
-    });
-    clientIds.set(client.name, user.id);
-  }
+  // Configuration de la boutique : lue par la vitrine (pied de page, WhatsApp)
+  // et par la facture. Modifiable ensuite depuis Paramètres.
+  await prisma.setting.upsert({
+    where: { id: "shop" },
+    update: {},
+    create: {
+      id: "shop",
+      shopName: "HUWSTORE",
+      phone: "70 966 62 59",
+      whatsapp: "221709666259",
+      email: process.env.SHOP_ADMIN_EMAIL ?? null,
+      city: "Dakar",
+      country: "Sénégal",
+      announcement: "Livraison 24 h sur Dakar · 72 h en région · Paiement à la livraison",
+    },
+  });
 
-  const variants = await prisma.productVariant.findMany({ include: { product: { select: { name: true, price: true } } } });
-  const variantOf = (productId: string, colorSlug: string) => {
-    const found = variants.find((v) => v.productId === productId && v.colorSlug === colorSlug);
-    if (!found) throw new Error(`Variante introuvable : ${productId} / ${colorSlug}`);
-    return found;
-  };
+  // Aucune bannière Hero par défaut : le premier slide du carrousel est fixe,
+  // codé dans `HeroSlider.tsx` (front). Les bannières Hero ne servent plus
+  // qu'aux campagnes ponctuelles que la boutique ajoute elle-même - en semer
+  // ici créerait de fausses "promotions" à côté du slide statique.
 
-  for (const order of demoOrders) {
-    const items = order.items.map((line) => {
-      const variant = variantOf(line.product, line.color);
-      return {
-        productId: line.product,
-        variantId: variant.id,
-        name: variant.product.name,
-        color: variant.colorName,
-        qty: line.qty,
-        price: variant.product.price,
-      };
-    });
-
-    await prisma.order.upsert({
-      where: { id: order.id },
-      update: {},
-      create: {
-        id: order.id,
-        userId: clientIds.get(order.client),
-        client: order.client,
-        city: order.city,
-        country: order.country,
-        total: items.reduce((sum, i) => sum + i.price * i.qty, 0),
-        pay: order.pay,
-        method: order.method,
-        status: order.status,
-        courier: order.courier,
-        tracking: order.tracking,
-        createdAt: new Date(order.date),
-        items: { create: items },
-      },
+  // Avis mis en avant sur la page d'accueil ("Les retours de nos clientes").
+  // Contenu de démarrage, à remplacer par de vrais retours dès qu'ils arrivent.
+  const existingTestimonials = await prisma.testimonial.count();
+  if (existingTestimonials === 0) {
+    await prisma.testimonial.createMany({
+      data: [
+        {
+          author: "Awa Diop",
+          role: "Cliente à Dakar",
+          text: "Le sac est encore plus beau qu'en photo, et la livraison a été rapide. Je recommande les yeux fermés.",
+          position: 0,
+          active: true,
+        },
+        {
+          author: "Fatou Ndiaye",
+          role: "Cliente fidèle",
+          text: "Deuxième commande chez HUWSTORE : la qualité du cuir est vraiment au rendez-vous, et le paiement à la livraison rassure.",
+          position: 1,
+          active: true,
+        },
+        {
+          author: "Mariama Sow",
+          role: "Cliente à Thiès",
+          text: "Commande passée sans compte, reçue en 72 h comme annoncé. Le tote bag est parfait pour le quotidien.",
+          position: 2,
+          active: true,
+        },
+      ],
     });
   }
 
-  // Bannières : réécrites à chaque seed (pas de clé naturelle).
-  await prisma.banner.deleteMany();
-  await prisma.banner.createMany({
-    data: [
-      {
-        title: "Nouvelle collection — tote bags en toile",
-        slot: "HERO",
-        target: "TOUTES",
-        start: new Date("2026-08-01"),
-        end: new Date("2026-12-31"),
-        active: true,
-        image: firstImage("tote-bag-velours-cotele", "noir-marron"),
-      },
-      {
-        title: "Livraison offerte dès 75 000 FCFA",
+  // Bandeau promo de l'accueil : met en avant le code de bienvenue semé plus
+  // haut (`promos`), pour que la section "Campagne en cours" ne reste pas
+  // vide tant que la boutique n'a pas publié sa propre campagne.
+  const existingPromoBanners = await prisma.banner.count({ where: { slot: "BANDEAU_PROMO" } });
+  if (existingPromoBanners === 0) {
+    await prisma.banner.create({
+      data: {
+        title: "Chez HUWSTORE",
+        subtitle: "-10 % sur votre première commande",
+        text: "Profitez de 10 % de réduction sur tout le catalogue avec le code BIENVENUE10.",
+        ctaLabel: "J'en profite",
+        ctaHref: "/boutique",
         slot: "BANDEAU_PROMO",
         target: "TOUTES",
-        start: new Date("2026-08-01"),
+        focus: "center",
+        position: 0,
+        start: new Date(),
         end: new Date("2026-12-31"),
         active: true,
-        image: firstImage("fourre-tout-toile-epaisse", "gris"),
+        image: productMedia("tote-bag-coton-durable").images.noir[0],
       },
-      {
-        title: "−10 % sur la première commande · BIENVENUE10",
-        slot: "POPUP",
-        target: "MOBILE",
-        start: new Date("2026-08-01"),
-        end: new Date("2026-12-31"),
-        active: false,
-        image: firstImage("sac-main-patchwork-pu", "rose"),
-      },
-    ],
-  });
+    });
+  }
 }
 
 async function main() {
   await seedCatalog();
   await seedOperations();
-  await seedDemo();
+  await seedBackOffice();
 
-  const [productCount, variantCount, imageCount] = await Promise.all([
+  const [productCount, variantCount, imageCount, zoneCount] = await Promise.all([
     prisma.product.count({ where: { active: true } }),
     prisma.productVariant.count({ where: { active: true } }),
     prisma.productImage.count(),
+    prisma.deliveryZone.count({ where: { active: true } }),
   ]);
 
-  console.log(`Catalogue : ${productCount} produits, ${variantCount} variantes, ${imageCount} images.`);
+  console.log(`Catalogue : ${productCount} produits, ${variantCount} déclinaisons, ${imageCount} images.`);
+  console.log(`Livraison : ${zoneCount} zones ouvertes.`);
   console.log(`Médias    : ${usingCloudinary ? "Cloudinary" : "fichiers locaux (front/public/products)"}.`);
   if (!usingCloudinary) console.log("Astuce    : lancez `npm run media:upload` pour basculer sur Cloudinary.");
 }

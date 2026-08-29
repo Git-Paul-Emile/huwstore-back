@@ -35,8 +35,20 @@ const manifest: Manifest = JSON.parse(
 
 const GENERATED = path.join(HERE, "media.generated.json");
 
+/**
+ * Visuels des univers, produits par `npm run media:upload`. Fichier separe de
+ * celui des produits : les deux manifestes n'ont ni la meme forme ni le meme
+ * cycle de vie, les melanger ferait aussi collisionner un slug de categorie
+ * avec un slug de produit.
+ */
+const UNIVERS_GENERATED = path.join(HERE, "univers.generated.json");
+
 const uploaded: Record<string, ProductMedia> | null = fs.existsSync(GENERATED)
   ? (JSON.parse(fs.readFileSync(GENERATED, "utf8")) as Record<string, ProductMedia>)
+  : null;
+
+const universUploaded: Record<string, string> | null = fs.existsSync(UNIVERS_GENERATED)
+  ? (JSON.parse(fs.readFileSync(UNIVERS_GENERATED, "utf8")) as Record<string, string>)
   : null;
 
 /** Chemin public servi par le front (front/public/products/...). */
@@ -59,6 +71,18 @@ export function productMedia(slug: string): ProductMedia {
   }
 
   return { images, video: entry.video ? `/products/${slug}/video.mp4` : null };
+}
+
+/**
+ * Visuel de depart d'un univers.
+ *
+ * Meme principe que pour les produits : Cloudinary si l'upload a eu lieu, sinon
+ * le fichier livre avec le front. Cette valeur n'est qu'un point de depart - une
+ * fois que la boutique a televerse son propre visuel depuis le back-office, le
+ * seed n'y touche plus (voir `seed.ts`).
+ */
+export function categoryImage(slug: string): string {
+  return universUploaded?.[slug] ?? `/univers/${slug}.webp`;
 }
 
 /** true si les URLs viennent de Cloudinary, false si on est sur le repli local. */

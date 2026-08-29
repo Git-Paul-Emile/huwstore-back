@@ -4,4 +4,8 @@ import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 
 export const clientRoutes = Router();
 
-clientRoutes.get("/", requireAuth, requireAdmin, clientController.list);
+clientRoutes.use(requireAuth, requireAdmin);
+
+// Declaree AVANT la liste : sinon "/export" n'aurait aucune chance d'exister.
+clientRoutes.get("/export", clientController.exportCsv);
+clientRoutes.get("/", clientController.list);

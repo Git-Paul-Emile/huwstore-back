@@ -1,11 +1,14 @@
 /**
- * Upload des medias produits vers Cloudinary.
+ * Upload des medias du catalogue vers Cloudinary.
  *
  *   npm run media:upload
  *
- * Source  : front/public/products/<slug>/<cle>-<n>.jpg (+ video.mp4)
- * Sortie  : back/prisma/media.generated.json, lu ensuite par prisma/media.ts,
- *           donc par le seed et par tout ce qui a besoin d'une URL d'image.
+ * Sources : front/public/products/<slug>/<cle>-<n>.jpg (+ video.mp4)
+ *           front/public/univers/<slug>.webp
+ * Sorties : back/prisma/media.generated.json   (photos produits)
+ *           back/prisma/univers.generated.json (visuels des univers)
+ *           Les deux sont lus par prisma/media.ts, donc par le seed et par tout
+ *           ce qui a besoin d'une URL d'image.
  *
  * Le script est IDEMPOTENT : le public_id est deterministe
  * (huwstore/products/<slug>/<cle>-<n>) et `overwrite: true` remplace l'asset
@@ -22,7 +25,9 @@ import { v2 as cloudinary } from "cloudinary";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_PRODUCTS = path.join(HERE, "../../front/public/products");
+const PUBLIC_UNIVERS = path.join(HERE, "../../front/public/univers");
 const OUTPUT = path.join(HERE, "../prisma/media.generated.json");
+const UNIVERS_OUTPUT = path.join(HERE, "../prisma/univers.generated.json");
 
 type ProductMedia = { images: Record<string, string[]>; video: string | null };
 
@@ -48,6 +53,40 @@ async function upload(localPath: string, publicId: string, resourceType: "image"
     invalidate: true,
   });
   return result.secure_url;
+}
+
+/**
+ * Visuels des univers : un fichier par categorie, nomme d'apres son slug.
+ *
+ * Ce sont des sacs detoures sur fond transparent : `format: "webp"` conserve la
+ * transparence, ce qu'un JPEG perdrait, et le public_id deterministe rend le
+ * script rejouable sans creer de doublon.
+ */
+async function uploadUnivers(): Promise<Record<string, string>> {
+  if (!fs.existsSync(PUBLIC_UNIVERS)) {
+    console.log("Aucun dossier front/public/univers : visuels d'univers ignores.");
+    return {};
+  }
+
+  const output: Record<string, string> = {};
+
+  for (const file of fs.readdirSync(PUBLIC_UNIVERS).sort()) {
+    const match = /^(.+)\.(webp|png|jpe?g|avif)$/i.exec(file);
+    if (!match) continue;
+
+    const slug = match[1];
+    const result = await cloudinary.uploader.upload(path.join(PUBLIC_UNIVERS, file), {
+      public_id: `huwstore/univers/${slug}`,
+      resource_type: "image",
+      format: "webp",
+      overwrite: true,
+      invalidate: true,
+    });
+    output[slug] = result.secure_url;
+    console.log(`  univers  ${file}`);
+  }
+
+  return output;
 }
 
 async function main() {
@@ -93,7 +132,12 @@ async function main() {
 
   fs.writeFileSync(OUTPUT, `${JSON.stringify(output, null, 2)}\n`);
   console.log(`\nURLs Cloudinary ecrites dans ${path.relative(process.cwd(), OUTPUT)}`);
-  console.log("Relancez `npm run seed` pour que la base utilise ces URLs.");
+
+  const univers = await uploadUnivers();
+  fs.writeFileSync(UNIVERS_OUTPUT, `${JSON.stringify(univers, null, 2)}\n`);
+  console.log(`univers : ${Object.keys(univers).length} visuel(s) -> ${path.relative(process.cwd(), UNIVERS_OUTPUT)}`);
+
+  console.log("\nRelancez `npm run seed` pour que la base utilise ces URLs.");
 }
 
 main().catch((error) => {

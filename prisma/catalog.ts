@@ -3,7 +3,7 @@
  *
  * Ce fichier est la traduction fidèle des fiches produits fournies par la
  * boutique : un objet TypeScript par article, avec ses déclinaisons couleur.
- * Il ne fait AUCUN accès base ni réseau — c'est de la donnée pure, que le seed
+ * Il ne fait AUCUN accès base ni réseau - c'est de la donnée pure, que le seed
  * (prisma/seed.ts) se contente d'écrire. Séparer la donnée du script qui
  * l'insère permet de la relire, de la corriger et de la tester sans lancer
  * de migration.
@@ -52,11 +52,16 @@ export type CategorySeed = {
   name: string;
   slug: string;
   position: number;
-  /** Produit + clé de média dont la première photo sert de visuel de catégorie. */
-  cover: { product: string; key: string };
+  /**
+   * Le visuel n'est pas listé ici : il se déduit du slug, par convention
+   * `front/public/univers/<slug>.webp`, et bascule sur son adresse Cloudinary
+   * dès que `npm run media:upload` a tourné (voir `media.ts`).
+   */
+  /** Résumé affiché sous le nom sur la page d'accueil - deux lignes maximum. */
+  description: string;
 };
 
-/** Entretien commun à tous les articles en toile — évite de répéter le texte. */
+/** Entretien commun à tous les articles en toile - évite de répéter le texte. */
 const ENTRETIEN_TOILE =
   "Pour préserver la qualité de la toile, ne pas laver en machine, ne pas laisser tremper et éviter les produits nettoyants trop agressifs, notamment le Madar. Nettoyer délicatement à l'aide d'un chiffon humide.";
 
@@ -64,10 +69,30 @@ const ENTRETIEN_TOILE_SANS_TREMPAGE =
   "Pour préserver la qualité de la toile, ne pas laver en machine, éviter les produits nettoyants trop agressifs, notamment le Madar. Nettoyer délicatement à l'aide d'un chiffon humide.";
 
 export const categories: CategorySeed[] = [
-  { name: "Toile & Coton", slug: "toile-coton", position: 1, cover: { product: "tote-bag-coton-durable", key: "noir" } },
-  { name: "Fourre-tout", slug: "fourre-tout", position: 2, cover: { product: "fourre-tout-toile-epaisse", key: "gris" } },
-  { name: "Oxford", slug: "oxford", position: 3, cover: { product: "fourre-tout-oxford", key: "vert" } },
-  { name: "Cuir PU", slug: "cuir-pu", position: 4, cover: { product: "sac-main-patchwork-pu", key: "bleu" } },
+  {
+    name: "Toile & Coton",
+    slug: "toile-coton",
+    position: 1,
+    description: "Tote bags en toile de coton, zippés, assez larges pour un ordinateur.",
+  },
+  {
+    name: "Fourre-tout",
+    slug: "fourre-tout",
+    position: 2,
+    description: "Grands sacs en toile épaisse, portés main ou épaule, très spacieux.",
+  },
+  {
+    name: "Oxford",
+    slug: "oxford",
+    position: 3,
+    description: "Tissu Oxford imperméable, bandoulière ajustable et plusieurs poches.",
+  },
+  {
+    name: "Cuir PU",
+    slug: "cuir-pu",
+    position: 4,
+    description: "Sacs à main en cuir polyuréthane, patchwork de couleurs douces.",
+  },
 ];
 
 export const products: ProductSeed[] = [
@@ -239,5 +264,5 @@ export const products: ProductSeed[] = [
 export const skuOf = (productSlug: string, colorSlug: string) =>
   `HUW-${productSlug.toUpperCase()}-${colorSlug.toUpperCase()}`;
 
-/** Stock initial appliqué à chaque variante — à ajuster depuis l'admin. */
+/** Stock initial appliqué à chaque variante - à ajuster depuis l'admin. */
 export const INITIAL_STOCK = { qty: 10, threshold: 3 };

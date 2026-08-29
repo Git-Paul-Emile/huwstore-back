@@ -53,4 +53,8 @@ export const productRepository = {
       distinct: ["colorSlug"],
       orderBy: { colorSlug: "asc" },
     }),
+
+  /** Bornes de prix du catalogue actif : elles alimentent le curseur de filtre. */
+  priceBounds: () =>
+    prisma.product.aggregate({ where: { active: true }, _min: { price: true }, _max: { price: true } }),
 };

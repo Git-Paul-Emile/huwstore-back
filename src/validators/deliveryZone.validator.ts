@@ -7,6 +7,7 @@ export const deliveryZoneSchema = z.object({
   freeFrom: z.number().int().nonnegative(),
   delay: z.string().min(1),
   relay: z.boolean().default(false),
+  active: z.boolean().default(true),
 });
 
 export const deliveryZoneUpdateSchema = deliveryZoneSchema.partial();

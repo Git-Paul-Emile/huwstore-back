@@ -21,11 +21,20 @@ export const payStatusMap = createEnumMap([
   ["ECHOUE", "Échoué"],
 ] as const);
 
-export const payMethodMap = createEnumMap([
-  ["WAVE", "Wave"],
-  ["ORANGE_MONEY", "Orange Money"],
-  ["COD", "Paiement à la livraison"],
-  ["CARTE", "Carte"],
+/**
+ * La boutique encaisse a la livraison, en especes, et rien d'autre : pas de
+ * paiement en ligne, pas de coordonnees bancaires collectees. L'enum ne porte
+ * donc qu'une seule valeur - un moyen de paiement present en base mais jamais
+ * ouvert serait une promesse que l'interface finirait par afficher.
+ */
+export const payMethodMap = createEnumMap([["COD", "Paiement à la livraison"]] as const);
+
+/** Moyens de paiement ouverts a la vente. */
+export const PAY_METHODS_OFFERTS = ["Paiement à la livraison"] as const;
+
+export const deliveryModeMap = createEnumMap([
+  ["DOMICILE", "Domicile"],
+  ["POINT_RELAIS", "Point relais"],
 ] as const);
 
 export const orderStatusMap = createEnumMap([
@@ -52,12 +61,6 @@ export const promoTypeMap = createEnumMap([
   ["POURCENTAGE", "Pourcentage"],
   ["MONTANT_FIXE", "Montant fixe"],
   ["LIVRAISON_OFFERTE", "Livraison offerte"],
-] as const);
-
-export const reviewStatusMap = createEnumMap([
-  ["EN_ATTENTE", "En attente"],
-  ["PUBLIE", "Publié"],
-  ["REJETE", "Rejeté"],
 ] as const);
 
 export const stockMoveTypeMap = createEnumMap([

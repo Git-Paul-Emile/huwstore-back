@@ -7,6 +7,10 @@ export const orderRepository = {
   findAll: (where: Prisma.OrderWhereInput, orderBy: Prisma.OrderOrderByWithRelationInput, skip: number, take: number) =>
     prisma.order.findMany({ where, include, orderBy, skip, take }),
 
+  /** Sans pagination : reserve a l'export CSV du back-office. */
+  findAllUnpaged: (where: Prisma.OrderWhereInput, orderBy: Prisma.OrderOrderByWithRelationInput) =>
+    prisma.order.findMany({ where, include, orderBy }),
+
   count: (where: Prisma.OrderWhereInput) => prisma.order.count({ where }),
 
   findByUserId: (userId: string) => prisma.order.findMany({ where: { userId }, include, orderBy: { createdAt: "desc" } }),
@@ -25,6 +29,7 @@ export const orderRepository = {
   createWithStockMovement: (
     order: Prisma.OrderCreateInput,
     lines: { variantId: string; qty: number; label: string }[],
+    promoCode?: string | null,
   ) =>
     prisma.$transaction(async (tx) => {
       const created = await tx.order.create({ data: order, include });
@@ -40,6 +45,13 @@ export const orderRepository = {
             author: "Système",
           },
         });
+      }
+
+      // Le compteur d'utilisation du code promo appartient a la meme
+      // transaction que la vente : un code a quota 1 ne peut pas etre
+      // consomme deux fois par deux commandes simultanees.
+      if (promoCode) {
+        await tx.promo.update({ where: { code: promoCode }, data: { used: { increment: 1 } } });
       }
 
       return created;

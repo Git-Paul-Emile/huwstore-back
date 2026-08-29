@@ -69,11 +69,10 @@ function toDto(product: ProductWithRelations) {
     price: product.price,
     compareAt: product.compareAt ?? undefined,
     badge: outOfStock ? "Rupture" : product.badge ? productBadgeMap.label(product.badge) : undefined,
-    rating: product.rating,
-    reviews: product.reviewsCount,
     videoUrl: product.videoUrl ?? undefined,
+    includedAccessory: product.includedAccessory ?? undefined,
 
-    // Champs de vitrine, dérivés — jamais stockés en double en base.
+    // Champs de vitrine, dérivés - jamais stockés en double en base.
     color: variants[0]?.color ?? "",
     colors: variants.map((v) => v.color),
     image: image?.url ?? "",
@@ -110,6 +109,11 @@ function toOrderBy(sort: z.infer<typeof productListQuerySchema>["sort"]): Prisma
       return { price: "desc" };
     case "new":
       return { createdAt: "desc" };
+    case "best":
+      // « Les plus vendus » : on classe sur le nombre de lignes de commande
+      // réellement enregistrées. C'est une donnée de vente, pas une note
+      // déclarative - la vitrine ne peut donc pas mentir sur ce classement.
+      return { orderItems: { _count: "desc" } };
     default:
       return { createdAt: "desc" };
   }
@@ -117,16 +121,23 @@ function toOrderBy(sort: z.infer<typeof productListQuerySchema>["sort"]): Prisma
 
 export const productService = {
   /**
-   * Liste paginée, filtrée, triée et recherchable — les quatre attendus d'une
+   * Liste paginée, filtrée, triée et recherchable - les quatre attendus d'une
    * collection REST. Renvoie les données ET les métadonnées de pagination.
    */
   async list(query: z.infer<typeof productListQuerySchema>) {
     const where: Prisma.ProductWhereInput = query.all ? {} : { active: true };
 
-    if (query.category) where.category = { OR: [{ name: query.category }, { slug: query.category }] };
-    if (query.material) where.material = query.material;
+    // Les trois filtres acceptent plusieurs valeurs : a l'interieur d'un meme
+    // filtre les valeurs s'additionnent (OU), entre filtres elles se cumulent
+    // (ET) - c'est le comportement attendu d'une boutique a facettes.
+    if (query.category) {
+      where.category = { OR: [{ name: { in: query.category } }, { slug: { in: query.category } }] };
+    }
+    if (query.material) where.material = { in: query.material };
     if (query.color) {
-      where.variants = { some: { active: true, OR: [{ colorSlug: query.color }, { colorName: query.color }] } };
+      where.variants = {
+        some: { active: true, OR: [{ colorSlug: { in: query.color } }, { colorName: { in: query.color } }] },
+      };
     }
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
       where.price = { ...(query.minPrice !== undefined && { gte: query.minPrice }), ...(query.maxPrice !== undefined && { lte: query.maxPrice }) };
@@ -159,7 +170,7 @@ export const productService = {
     };
   },
 
-  /** Accepte indifféremment l'identifiant ou le slug — pratique pour les URLs. */
+  /** Accepte indifféremment l'identifiant ou le slug - pratique pour les URLs. */
   async getById(idOrSlug: string) {
     const product = (await productRepository.findById(idOrSlug)) ?? (await productRepository.findBySlug(idOrSlug));
     if (!product) throw AppError.notFound("Produit introuvable.");
@@ -168,13 +179,18 @@ export const productService = {
 
   /** Facettes de filtre calculées depuis la base, jamais codées en dur. */
   async facets() {
-    const [materials, colors] = await Promise.all([
+    const [materials, colors, prices] = await Promise.all([
       productRepository.distinctMaterials(),
       productRepository.distinctColors(),
+      productRepository.priceBounds(),
     ]);
     return {
       materials: materials.map((m) => m.material),
       colors: colors.map((c) => ({ name: c.colorName, slug: c.colorSlug, hex: c.hex })),
+      // Bornes reelles du catalogue : le curseur de prix ne doit pas etre code
+      // en dur cote front, sinon il ment des le premier changement de tarif.
+      priceMin: prices._min.price ?? 0,
+      priceMax: prices._max.price ?? 0,
     };
   },
 
@@ -207,6 +223,7 @@ export const productService = {
       handleDropMm: input.handleDropMm,
       weightGrams: input.weightGrams,
       features: input.features,
+      includedAccessory: input.includedAccessory,
       active: input.active,
       variants: {
         create: input.variants.map((variant, position) => ({
@@ -220,7 +237,7 @@ export const productService = {
           images: {
             create: variant.images.map((url, index) => ({
               url,
-              alt: `${input.name} — coloris ${variant.color}`,
+              alt: `${input.name} - coloris ${variant.color}`,
               position: position * 100 + index,
               product: { connect: { id } },
             })),

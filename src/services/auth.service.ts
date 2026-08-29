@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { userRepository } from "../repositories/user.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { signAccessToken, signRefreshToken } from "../config/jwt.js";
-import type { loginSchema, registerSchema } from "../validators/auth.validator.js";
+import type { loginSchema, profileUpdateSchema, registerSchema } from "../validators/auth.validator.js";
 import type { z } from "zod";
 
 const toDto = (user: { id: string; name: string; phone: string; email: string | null; role: "CLIENT" | "ADMIN" }) => ({
@@ -46,6 +46,48 @@ export const authService = {
     if (!valid) throw AppError.unauthorized("Identifiants invalides.");
 
     return issueSession(user);
+  },
+
+  /**
+   * Renouvelle la session a partir du seul identifiant porte par le jeton de
+   * rafraichissement. On RELIT l'utilisateur en base a chaque fois : un compte
+   * supprime, ou dont le role a change, ne doit pas continuer a vivre pendant
+   * trente jours sur la foi d'un jeton emis autrefois.
+   */
+  async refresh(userId: string) {
+    const user = await userRepository.findById(userId);
+    if (!user) throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+    return issueSession(user);
+  },
+
+  /**
+   * Mise a jour du profil. Deux precautions qui n'en font qu'une : on relit
+   * l'utilisateur en base (le jeton ne porte que son identifiant), et on exige
+   * le mot de passe actuel avant d'en accepter un nouveau.
+   */
+  async updateProfile(userId: string, input: z.infer<typeof profileUpdateSchema>) {
+    const user = await userRepository.findById(userId);
+    if (!user) throw AppError.notFound("Utilisateur introuvable.");
+
+    const data: { name?: string; email?: string | null; passwordHash?: string } = {};
+
+    if (input.name) data.name = input.name;
+
+    if (input.email !== undefined) {
+      if (input.email) {
+        const existing = await userRepository.findByEmail(input.email);
+        if (existing && existing.id !== userId) throw AppError.conflict("Cette adresse e-mail est déjà utilisée.");
+      }
+      data.email = input.email;
+    }
+
+    if (input.newPassword) {
+      const valid = await bcrypt.compare(input.currentPassword ?? "", user.passwordHash);
+      if (!valid) throw AppError.badRequest("Mot de passe actuel incorrect.");
+      data.passwordHash = await bcrypt.hash(input.newPassword, 10);
+    }
+
+    return toDto(await userRepository.update(userId, data));
   },
 
   async me(userId: string) {

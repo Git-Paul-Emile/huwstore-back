@@ -1,13 +1,14 @@
 import { getParam } from "../utils/getParam.js";
 import { StatusCodes } from "http-status-codes";
 import { bannerService } from "../services/banner.service.js";
-import { bannerSchema, bannerUpdateSchema } from "../validators/banner.validator.js";
+import { bannerListQuerySchema, bannerSchema, bannerUpdateSchema } from "../validators/banner.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
 
 export const bannerController = {
-  list: controllerWrapper(async (_req, res) => {
-    const banners = await bannerService.list();
+  list: controllerWrapper(async (req, res) => {
+    const query = bannerListQuerySchema.parse(req.query);
+    const banners = await bannerService.list(query);
     jsonResponse(res, StatusCodes.OK, "success", "Bannières récupérées.", banners);
   }),
 

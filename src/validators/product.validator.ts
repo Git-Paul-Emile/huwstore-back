@@ -40,6 +40,8 @@ export const productSchema = z.object({
   handleDropMm: z.number().int().positive().optional(),
   weightGrams: z.number().int().positive().optional(),
   features: z.array(z.string().min(1)).default([]),
+  /** Ex. "Livré avec une pochette assortie" - vide si le modèle n'a pas d'accessoire inclus. */
+  includedAccessory: z.string().min(1).optional(),
 
   active: z.boolean().default(true),
   variants: z.array(variantSchema).min(1, "Au moins une déclinaison couleur est requise."),
@@ -78,6 +80,7 @@ export const productUpdateSchema = z
     handleDropMm: z.number().int().positive().nullable().optional(),
     weightGrams: z.number().int().positive().nullable().optional(),
     features: z.array(z.string().min(1)).optional(),
+    includedAccessory: z.string().min(1).nullable().optional(),
     active: z.boolean().optional(),
   })
   .strict();
@@ -87,14 +90,32 @@ export const productUpdateSchema = z
  * Les valeurs par défaut sont posées ici pour que le service reçoive toujours
  * une requête complète, jamais des `undefined` à gérer.
  */
+/**
+ * Filtre multi-valeurs. La boutique laisse cocher plusieurs matieres ou
+ * plusieurs coloris a la fois : le parametre accepte donc soit une valeur
+ * ("cuir"), soit une liste separee par des virgules ("cuir,toile"), soit le
+ * meme parametre repete (?material=cuir&material=toile), les trois formes
+ * qu'un client HTTP peut naturellement produire.
+ */
+const csvList = z
+  .union([z.string(), z.array(z.string())])
+  .optional()
+  .transform((value) => {
+    if (value === undefined) return undefined;
+    const parts = (Array.isArray(value) ? value : value.split(","))
+      .map((part) => part.trim())
+      .filter(Boolean);
+    return parts.length > 0 ? parts : undefined;
+  });
+
 export const productListQuerySchema = z.object({
-  category: z.string().optional(),
-  material: z.string().optional(),
-  color: z.string().optional(),
+  category: csvList,
+  material: csvList,
+  color: csvList,
   minPrice: z.coerce.number().int().nonnegative().optional(),
   maxPrice: z.coerce.number().int().nonnegative().optional(),
   search: z.string().trim().min(1).optional(),
-  sort: z.enum(["featured", "price-asc", "price-desc", "new"]).default("featured"),
+  sort: z.enum(["featured", "best", "price-asc", "price-desc", "new"]).default("featured"),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(100).default(24),
   // Vue admin : inclut aussi les produits désactivés/archivés.
