@@ -17,14 +17,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 /** Numéros des clientes fictives de l'ancien seed, sous leurs deux écritures. */
-const DEMO_PHONES = [
-  "778124490",
-  "774522180",
-  "763301107",
-  "709401233",
-  "762188400",
-  "775530210",
-].flatMap((phone) => [phone, `+221${phone}`]);
+const DEMO_PHONES = ["778124490", "774522180", "763301107", "709401233", "762188400", "775530210"].flatMap((phone) => [
+  phone,
+  `+221${phone}`,
+]);
 
 async function main() {
   const demoOrders = await prisma.order.findMany({

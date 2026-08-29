@@ -37,11 +37,7 @@ export function computeShippingFee(
  * panier de 15 000 FCFA produirait un total negatif, c'est-a-dire une commande
  * ou la boutique devrait de l'argent a la cliente.
  */
-export function computeDiscount(
-  promo: Pick<Promo, "type" | "value">,
-  subtotal: number,
-  shippingFee: number,
-): number {
+export function computeDiscount(promo: Pick<Promo, "type" | "value">, subtotal: number, shippingFee: number): number {
   const raw =
     promo.type === "POURCENTAGE"
       ? Math.round((subtotal * promo.value) / 100)

@@ -46,9 +46,36 @@ const deliveryZones = [
 ];
 
 const promos = [
-  { code: "BIENVENUE10", type: "POURCENTAGE" as const, value: 10, minCart: 0, used: 0, limit: 1000, end: "2026-12-31", active: true },
-  { code: "LIVRAISON0", type: "LIVRAISON_OFFERTE" as const, value: 0, minCart: 50000, used: 0, limit: 500, end: "2026-09-30", active: true },
-  { code: "RENTREE5000", type: "MONTANT_FIXE" as const, value: 5000, minCart: 60000, used: 0, limit: 300, end: "2026-09-15", active: false },
+  {
+    code: "BIENVENUE10",
+    type: "POURCENTAGE" as const,
+    value: 10,
+    minCart: 0,
+    used: 0,
+    limit: 1000,
+    end: "2026-12-31",
+    active: true,
+  },
+  {
+    code: "LIVRAISON0",
+    type: "LIVRAISON_OFFERTE" as const,
+    value: 0,
+    minCart: 50000,
+    used: 0,
+    limit: 500,
+    end: "2026-09-30",
+    active: true,
+  },
+  {
+    code: "RENTREE5000",
+    type: "MONTANT_FIXE" as const,
+    value: 5000,
+    minCart: 60000,
+    used: 0,
+    limit: 300,
+    end: "2026-09-15",
+    active: false,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -69,8 +96,7 @@ async function seedCatalog() {
     // back-office : le seed les pose une premiere fois puis s'efface, sinon
     // chaque `npm run seed` effacerait le travail de la boutique.
     const existante = await prisma.category.findUnique({ where: { slug: category.slug } });
-    const image =
-      existante && !visuelLivreAvecLeCode(existante.image) ? existante.image : categoryImage(category.slug);
+    const image = existante && !visuelLivreAvecLeCode(existante.image) ? existante.image : categoryImage(category.slug);
 
     const row = await prisma.category.upsert({
       where: { slug: category.slug },

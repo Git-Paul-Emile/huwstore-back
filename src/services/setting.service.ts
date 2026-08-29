@@ -1,6 +1,15 @@
 import { settingRepository } from "../repositories/setting.repository.js";
+import { TtlCache } from "../lib/cache.js";
 import type { settingUpdateSchema } from "../validators/setting.validator.js";
 import type { z } from "zod";
+
+/**
+ * Les paramètres sont lus à chaque e-mail, chaque facture et chaque chargement
+ * de la vitrine, mais changent quelques fois par an : 60 s de cache évitent des
+ * milliers de lectures identiques sans jamais afficher une info vraiment périmée.
+ */
+const CACHE_KEY = "settings";
+const cache = new TtlCache(60_000);
 
 type SettingRow = NonNullable<Awaited<ReturnType<typeof settingRepository.find>>>;
 
@@ -30,10 +39,12 @@ export type SettingDto = ReturnType<typeof toDto>;
  */
 export const settingService = {
   /** Toujours disponible : la ligne est creee a la volee au premier appel. */
-  get: async () => toDto(await settingRepository.ensure()),
+  get: (): Promise<SettingDto> => cache.remember(CACHE_KEY, async () => toDto(await settingRepository.ensure())),
 
   async update(input: z.infer<typeof settingUpdateSchema>) {
     await settingRepository.ensure();
-    return toDto(await settingRepository.update(input));
+    const updated = toDto(await settingRepository.update(input));
+    cache.invalidate(CACHE_KEY);
+    return updated;
   },
 };

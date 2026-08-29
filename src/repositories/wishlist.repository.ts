@@ -13,8 +13,7 @@ export const wishlistRepository = {
       update: {},
     }),
 
-  remove: (userId: string, productId: string) =>
-    prisma.wishlistItem.deleteMany({ where: { userId, productId } }),
+  remove: (userId: string, productId: string) => prisma.wishlistItem.deleteMany({ where: { userId, productId } }),
 
   /** Fusion de la liste locale d'un visiteur au moment ou il se connecte. */
   merge: (userId: string, productIds: string[]) =>

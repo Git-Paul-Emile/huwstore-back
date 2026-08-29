@@ -24,7 +24,7 @@ describe("toCsv", () => {
 
   it("neutralise une cellule qui commence par = (injection de formule Excel)", () => {
     const csv = toCsv([{ name: "=1+1", total: 0 }], columns);
-    assert.ok(csv.includes("\"'=1+1\""));
+    assert.ok(csv.includes('"\'=1+1"'));
   });
 
   it("sépare les lignes par un retour chariot Windows", () => {

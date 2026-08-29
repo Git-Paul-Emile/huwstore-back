@@ -11,14 +11,17 @@
     "seed": "tsx prisma/seed.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "audit": "npm audit --audit-level=high",
     "media:upload": "tsx scripts/upload-media.ts",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "test:watch": "node --import tsx --test --watch \"src/**/*.test.ts\"",
+    "test:integration": "node --import tsx --test \"src/**/*.itest.ts\"",
     "db:purge-demo": "tsx scripts/purge-demo.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",
-    "bcrypt": "^5.1.1",
+    "@sentry/node": "^10.72.0",
+    "bcrypt": "^6.0.0",
     "cloudinary": "^2.10.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -49,5 +52,8 @@
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
   }
 }

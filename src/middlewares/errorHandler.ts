@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { AppError } from "../utils/AppError.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
 import { logger } from "../config/logger.js";
+import { monitoring } from "../config/monitoring.js";
 
 /**
  * Gestion centralisee des erreurs : c'est le SEUL endroit du back qui decide
@@ -44,9 +45,11 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return;
   }
 
-  logger.error(
-    { err, method: req.method, path: req.originalUrl, userId: req.user?.userId },
-    "Erreur non gérée",
-  );
+  monitoring.captureException(err, {
+    method: req.method,
+    path: req.originalUrl,
+    userId: req.user?.userId,
+    requestId: req.requestId,
+  });
   jsonResponse(res, 500, "error", "Une erreur inattendue est survenue.");
 }

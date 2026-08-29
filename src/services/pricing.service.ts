@@ -1,6 +1,8 @@
 import type { Promo } from "@prisma/client";
-import { prisma } from "../config/database.js";
 import { AppError } from "../utils/AppError.js";
+import { productRepository } from "../repositories/product.repository.js";
+import { deliveryZoneRepository } from "../repositories/deliveryZone.repository.js";
+import { promoRepository } from "../repositories/promo.repository.js";
 import { assertPromoUsable, computeDiscount, computeShippingFee, promoLabel } from "./pricing.rules.js";
 
 /**
@@ -53,10 +55,7 @@ export const pricingService = {
    * d'ecrire que d'echouer au milieu d'une transaction.
    */
   async quote(input: PriceInput): Promise<PriceBreakdown> {
-    const variants = await prisma.productVariant.findMany({
-      where: { id: { in: input.items.map((i) => i.variantId) }, active: true },
-      include: { product: { select: { id: true, name: true, price: true, active: true } }, stock: true },
-    });
+    const variants = await productRepository.findActiveVariantsForPricing(input.items.map((i) => i.variantId));
 
     if (variants.length !== input.items.length) {
       throw AppError.badRequest("Un ou plusieurs articles sont introuvables ou ne sont plus disponibles.");
@@ -89,7 +88,7 @@ export const pricingService = {
     // Frais de port : la zone est relue en base, jamais recue du navigateur.
     let zone: { fee: number; freeFrom: number } | null = null;
     if (input.deliveryZoneId) {
-      zone = await prisma.deliveryZone.findUnique({ where: { id: input.deliveryZoneId } });
+      zone = await deliveryZoneRepository.findById(input.deliveryZoneId);
       if (!zone) throw AppError.badRequest("Zone de livraison inconnue.");
     }
     const shippingFee = computeShippingFee(subtotal, zone, input.deliveryMode);
@@ -99,7 +98,7 @@ export const pricingService = {
     let promo: Promo | null = null;
     if (input.promoCode) {
       const code = input.promoCode.trim().toUpperCase();
-      promo = assertPromoUsable(await prisma.promo.findUnique({ where: { code } }), code, subtotal);
+      promo = assertPromoUsable(await promoRepository.findByCode(code), code, subtotal);
       discount = computeDiscount(promo, subtotal, shippingFee);
     }
 

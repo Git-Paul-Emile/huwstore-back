@@ -24,7 +24,10 @@ export const stockRepository = {
     }),
 
   findVariantById: (variantId: string) =>
-    prisma.productVariant.findUnique({ where: { id: variantId }, include: { product: { select: { name: true } }, stock: true } }),
+    prisma.productVariant.findUnique({
+      where: { id: variantId },
+      include: { product: { select: { name: true } }, stock: true },
+    }),
 
   findVariantBySku: (sku: string) =>
     prisma.productVariant.findUnique({ where: { sku }, include: { product: { select: { name: true } }, stock: true } }),

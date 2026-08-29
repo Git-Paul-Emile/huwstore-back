@@ -21,7 +21,16 @@ const isProduction = process.env.NODE_ENV === "production";
 const minimum = LEVEL_ORDER[(process.env.LOG_LEVEL as Level) ?? (isProduction ? "info" : "debug")] ?? 20;
 
 /** Champs qui ne doivent JAMAIS atterrir dans un journal, même par accident. */
-const SECRETS = new Set(["authorization", "cookie", "set-cookie", "password", "passwordhash", "token", "accesstoken", "refreshtoken"]);
+const SECRETS = new Set([
+  "authorization",
+  "cookie",
+  "set-cookie",
+  "password",
+  "passwordhash",
+  "token",
+  "accesstoken",
+  "refreshtoken",
+]);
 
 /**
  * Recopie le contexte en masquant les secrets et en rendant les erreurs

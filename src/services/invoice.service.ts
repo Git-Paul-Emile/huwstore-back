@@ -97,7 +97,13 @@ export const invoiceService = {
     doc.text("DÉSIGNATION", columns.article, y + 4, { size: 7.5, font: "bold", color: GREY });
     doc.text("QTÉ", columns.qty, y + 4, { size: 7.5, font: "bold", color: GREY, align: "right", width: 30 });
     doc.text("PRIX UNITAIRE", columns.unit, y + 4, { size: 7.5, font: "bold", color: GREY, align: "right", width: 70 });
-    doc.text("TOTAL", columns.total, y + 4, { size: 7.5, font: "bold", color: GREY, align: "right", width: right(columns.total) });
+    doc.text("TOTAL", columns.total, y + 4, {
+      size: 7.5,
+      font: "bold",
+      color: GREY,
+      align: "right",
+      width: right(columns.total),
+    });
     y += 32;
 
     for (const item of order.items) {
@@ -105,7 +111,11 @@ export const invoiceService = {
       doc.text(label, columns.article, y, { size: 9.5 });
       doc.text(String(item.qty), columns.qty, y, { size: 9.5, align: "right", width: 30 });
       doc.text(fcfa(item.price), columns.unit, y, { size: 9.5, align: "right", width: 70 });
-      doc.text(fcfa(item.price * item.qty), columns.total, y, { size: 9.5, align: "right", width: right(columns.total) });
+      doc.text(fcfa(item.price * item.qty), columns.total, y, {
+        size: 9.5,
+        align: "right",
+        width: right(columns.total),
+      });
       y += 12;
       doc.line(MARGIN, y, contentWidth);
       y += 14;
@@ -140,20 +150,10 @@ export const invoiceService = {
     y += 16;
     doc.rect(MARGIN, y, contentWidth, 52, LIGHT);
     doc.text("Règlement", MARGIN + 14, y + 20, { size: 8, font: "bold", color: GOLD });
-    doc.text(
-      `${order.method} - statut : ${order.pay.toLowerCase()}.`,
-      MARGIN + 14,
-      y + 36,
-      { size: 9.5, color: INK },
-    );
+    doc.text(`${order.method} - statut : ${order.pay.toLowerCase()}.`, MARGIN + 14, y + 36, { size: 9.5, color: INK });
     y += 72;
 
-    doc.text(
-      shop.ninea ? `NINEA ${shop.ninea}` : "TVA non applicable.",
-      MARGIN,
-      y,
-      { size: 8.5, color: GREY },
-    );
+    doc.text(shop.ninea ? `NINEA ${shop.ninea}` : "TVA non applicable.", MARGIN, y, { size: 8.5, color: GREY });
     y += 14;
     doc.paragraph(
       "Aucun paiement en ligne n'est demandé : le règlement se fait en espèces à la remise du colis. " +

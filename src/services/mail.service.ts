@@ -1,13 +1,15 @@
-import { resend, RESEND_FROM_EMAIL } from "../config/resend.js";
+import { getMailer } from "./external/mailer.js";
 import { settingService } from "./setting.service.js";
 import { logger } from "../config/logger.js";
 
 /**
- * Envoi d'e-mails transactionnels.
+ * Contenu des e-mails transactionnels.
  *
- * Principe : un e-mail qui échoue ne doit JAMAIS annuler une vente. Toutes les
- * fonctions publiques d'ici avalent leurs erreurs et se contentent de les
- * journaliser. Elles sont appelées APRÈS la transaction, jamais dedans.
+ * Ce service RÉDIGE les messages et les confie au port `Mailer`. Il n'est
+ * jamais appelé directement depuis un contrôleur : la file de tâches
+ * (`queue/index.ts`) l'invoque en arrière-plan, APRÈS la transaction. Une
+ * erreur ici remonte donc volontairement - c'est la file qui décide de rejouer
+ * ou de mettre en lettre morte.
  *
  * Deux destinataires, deux rôles :
  *  - la boutique reçoit le signal d'action (« un colis à préparer ») ;
@@ -80,17 +82,9 @@ const receiptUrl = (order: OrderMailPayload) =>
   SITE_URL ? `${SITE_URL}/commande/${order.id}?token=${order.publicToken}` : null;
 
 async function send(to: string, subject: string, html: string) {
-  if (!process.env.RESEND_API_KEY) {
-    logger.warn({ subject, to }, "RESEND_API_KEY absente : e-mail non envoyé");
-    return;
-  }
-  try {
-    await resend.emails.send({ from: RESEND_FROM_EMAIL, to, subject, html });
-    logger.info({ subject, to }, "E-mail envoyé");
-  } catch (error) {
-    // Journalise et continue : la commande est deja enregistree.
-    logger.error({ err: error, subject, to }, "Échec de l'envoi d'un e-mail");
-  }
+  const mailer = await getMailer();
+  await mailer.send({ to, subject, html });
+  logger.info({ subject, to, mailer: mailer.name }, "E-mail envoyé");
 }
 
 export const mailService = {
@@ -101,7 +95,9 @@ export const mailService = {
       return;
     }
     const shop = await settingService.get();
-    const link = SITE_URL ? `<p style="font-size:13px"><a href="${SITE_URL}/admin/commandes">Ouvrir le back-office</a></p>` : "";
+    const link = SITE_URL
+      ? `<p style="font-size:13px"><a href="${SITE_URL}/admin/commandes">Ouvrir le back-office</a></p>`
+      : "";
 
     await send(
       ADMIN_EMAIL,
@@ -110,7 +106,9 @@ export const mailService = {
         shop.shopName,
         "Nouvelle commande à préparer",
         `${deliveryBlock(order)}${lineTable(order)}${
-          order.note ? `<p style="font-size:13px;margin-top:16px"><strong>Note de la cliente :</strong> ${order.note}</p>` : ""
+          order.note
+            ? `<p style="font-size:13px;margin-top:16px"><strong>Note de la cliente :</strong> ${order.note}</p>`
+            : ""
         }${order.guest ? `<p style="font-size:13px;color:#8c857a">Commande passée sans compte.</p>` : ""}${link}`,
       ),
     );

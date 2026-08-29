@@ -61,7 +61,10 @@
       "video": null,
       "images": {
         "noir-marron": ["WhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
-        "noir-blanc-casse": ["lWhatsApp Image 2026-08-25 at 15.42.47.jpeg", "oWhatsApp Image 2026-08-25 at 15.42.48.jpeg"],
+        "noir-blanc-casse": [
+          "lWhatsApp Image 2026-08-25 at 15.42.47.jpeg",
+          "oWhatsApp Image 2026-08-25 at 15.42.48.jpeg"
+        ],
         "blanc-casse-marron": ["llWhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
         "_generic": ["pWhatsApp Image 2026-08-25 at 15.42.48.jpeg", "WhatsApp Image 2026-08-25 at 15.42.49.jpeg"]
       }

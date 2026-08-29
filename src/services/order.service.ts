@@ -3,7 +3,7 @@ import { orderRepository } from "../repositories/order.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { deliveryModeMap, orderStatusMap, payMethodMap, payStatusMap } from "../utils/enumMaps.js";
 import { pricingService } from "./pricing.service.js";
-import { mailService } from "./mail.service.js";
+import { jobQueue, JOBS } from "../queue/index.js";
 import { logger } from "../config/logger.js";
 import type { orderCreateSchema, orderUpdateSchema, orderListQuerySchema } from "../validators/order.validator.js";
 import type { z } from "zod";
@@ -188,10 +188,11 @@ export const orderService = {
     const dto = toDto(order);
     const mailPayload = { ...dto, publicToken: order.publicToken };
 
-    // Hors transaction et sans await bloquant : la vente est acquise, un e-mail
-    // qui echoue ne doit pas transformer une commande valide en erreur 500.
-    void mailService.notifyNewOrder(mailPayload);
-    void mailService.confirmToClient(mailPayload);
+    // Les e-mails partent dans la file de tâches : la vente est acquise, elle
+    // ne doit pas attendre - ni échouer si - l'envoi. La clé d'idempotence
+    // garantit qu'un même e-mail n'est jamais envoyé deux fois.
+    jobQueue.enqueue(JOBS.orderNotifyShop, mailPayload, { idempotencyKey: `notify-shop:${order.id}` });
+    jobQueue.enqueue(JOBS.orderConfirmClient, mailPayload, { idempotencyKey: `confirm-client:${order.id}` });
 
     // Le jeton n'est renvoye QU'ICI, a celle qui vient de commander.
     return { ...dto, publicToken: order.publicToken };

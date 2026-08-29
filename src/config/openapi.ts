@@ -67,11 +67,9 @@ export const openApiDocument = {
       "renouvelé par `POST /auth/refresh` grâce au cookie de rafraîchissement `HttpOnly`.\n\n" +
       "**Enveloppe** : toute réponse a la forme `{ status, message, data }`, complétée de `meta` " +
       "pour les collections paginées.",
-    contact: { name: "HUWSTORE", url: "https://huwstore.sn" },
+    contact: { name: "HUWSTORE", url: "https://huwstore.com" },
   },
-  servers: [
-    { url: "/api/v1", description: "Version courante" },
-  ],
+  servers: [{ url: "/api/v1", description: "Version courante" }],
   tags: [
     { name: "Authentification" },
     { name: "Catalogue" },
@@ -107,7 +105,11 @@ export const openApiDocument = {
       },
     },
     "/auth/logout": {
-      post: { tags: ["Authentification"], summary: "Fermer la session", responses: { 200: ok("Déconnecté.", { type: "null" }) } },
+      post: {
+        tags: ["Authentification"],
+        summary: "Fermer la session",
+        responses: { 200: ok("Déconnecté.", { type: "null" }) },
+      },
     },
     "/auth/me": {
       get: {
@@ -136,14 +138,23 @@ export const openApiDocument = {
         parameters: [
           ...collectionParams,
           { name: "category", in: "query", schema: { type: "string" }, description: "Slugs séparés par des virgules." },
-          { name: "material", in: "query", schema: { type: "string" }, description: "Matières séparées par des virgules." },
+          {
+            name: "material",
+            in: "query",
+            schema: { type: "string" },
+            description: "Matières séparées par des virgules.",
+          },
           { name: "color", in: "query", schema: { type: "string" }, description: "Coloris séparés par des virgules." },
           { name: "minPrice", in: "query", schema: { type: "integer" } },
           { name: "maxPrice", in: "query", schema: { type: "integer" } },
           {
             name: "sort",
             in: "query",
-            schema: { type: "string", enum: ["featured", "best", "price-asc", "price-desc", "new"], default: "featured" },
+            schema: {
+              type: "string",
+              enum: ["featured", "best", "price-asc", "price-desc", "new"],
+              default: "featured",
+            },
             description: "`best` classe par quantités réellement vendues.",
           },
         ],
@@ -190,7 +201,11 @@ export const openApiDocument = {
     },
 
     "/categories": {
-      get: { tags: ["Catalogue"], summary: "Lister les catégories", responses: { 200: ok("Catégories récupérées.", list("Category")) } },
+      get: {
+        tags: ["Catalogue"],
+        summary: "Lister les catégories",
+        responses: { 200: ok("Catégories récupérées.", list("Category")) },
+      },
       post: {
         tags: ["Back-office"],
         summary: "Créer une catégorie",
@@ -226,7 +241,11 @@ export const openApiDocument = {
           ...collectionParams,
           { name: "status", in: "query", schema: { type: "string" } },
           { name: "pay", in: "query", schema: { type: "string" } },
-          { name: "sort", in: "query", schema: { type: "string", enum: ["recent", "oldest", "total-desc", "total-asc"] } },
+          {
+            name: "sort",
+            in: "query",
+            schema: { type: "string", enum: ["recent", "oldest", "total-desc", "total-asc"] },
+          },
         ],
         responses: { 200: ok("Commandes récupérées.", list("Order"), true), ...errors },
       },
@@ -254,7 +273,10 @@ export const openApiDocument = {
         tags: ["Back-office"],
         summary: "Exporter les commandes en CSV",
         security: adminSecurity,
-        responses: { 200: { description: "Fichier CSV.", content: { "text/csv": { schema: { type: "string" } } } }, ...errors },
+        responses: {
+          200: { description: "Fichier CSV.", content: { "text/csv": { schema: { type: "string" } } } },
+          ...errors,
+        },
       },
     },
     "/orders/{id}": {
@@ -262,7 +284,15 @@ export const openApiDocument = {
         tags: ["Commandes"],
         summary: "Consulter une commande",
         description: "Soit connecté et propriétaire de la commande, soit muni du `token` de lecture remis à l'achat.",
-        parameters: [idParam, { name: "token", in: "query", schema: { type: "string" }, description: "Jeton de lecture (commande en invité)." }],
+        parameters: [
+          idParam,
+          {
+            name: "token",
+            in: "query",
+            schema: { type: "string" },
+            description: "Jeton de lecture (commande en invité).",
+          },
+        ],
         responses: { 200: ok("Commande récupérée.", ref("Order")), ...errors },
       },
       patch: {
@@ -279,12 +309,22 @@ export const openApiDocument = {
         tags: ["Commandes"],
         summary: "Télécharger la facture PDF",
         parameters: [idParam, { name: "token", in: "query", schema: { type: "string" } }],
-        responses: { 200: { description: "Facture PDF.", content: { "application/pdf": { schema: { type: "string", format: "binary" } } } }, ...errors },
+        responses: {
+          200: {
+            description: "Facture PDF.",
+            content: { "application/pdf": { schema: { type: "string", format: "binary" } } },
+          },
+          ...errors,
+        },
       },
     },
 
     "/delivery-zones": {
-      get: { tags: ["Catalogue"], summary: "Zones de livraison ouvertes", responses: { 200: ok("Zones récupérées.", list("DeliveryZone")) } },
+      get: {
+        tags: ["Catalogue"],
+        summary: "Zones de livraison ouvertes",
+        responses: { 200: ok("Zones récupérées.", list("DeliveryZone")) },
+      },
       post: {
         tags: ["Back-office"],
         summary: "Ouvrir une zone",
@@ -307,18 +347,25 @@ export const openApiDocument = {
         tags: ["Catalogue"],
         summary: "Bannières publiées",
         description: "Par défaut, seules les bannières actives dans leur fenêtre de diffusion.",
-        parameters: [{ name: "slot", in: "query", schema: { type: "string", enum: ["Hero", "Bandeau promo", "Pop-up"] } }],
+        parameters: [
+          { name: "slot", in: "query", schema: { type: "string", enum: ["Hero", "Bandeau promo", "Pop-up"] } },
+        ],
         responses: { 200: ok("Bannières récupérées.", list("Banner")) },
       },
     },
     "/testimonials": {
-      get: { tags: ["Catalogue"], summary: "Témoignages publiés", responses: { 200: ok("Témoignages récupérés.", list("Testimonial")) } },
+      get: {
+        tags: ["Catalogue"],
+        summary: "Témoignages publiés",
+        responses: { 200: ok("Témoignages récupérés.", list("Testimonial")) },
+      },
     },
     "/feedback": {
       post: {
         tags: ["Avis"],
         summary: "Déposer un avis sur le site",
-        description: "Ouvert à toute visiteuse, avec ou sans compte. N'est jamais publié automatiquement : lu et traité depuis le back-office.",
+        description:
+          "Ouvert à toute visiteuse, avec ou sans compte. N'est jamais publié automatiquement : lu et traité depuis le back-office.",
         requestBody: { required: true, ...json(ref("FeedbackInput")) },
         responses: { 201: ok("Avis déposé.", ref("Feedback")), ...errors },
       },
@@ -346,7 +393,11 @@ export const openApiDocument = {
       },
     },
     "/settings": {
-      get: { tags: ["Catalogue"], summary: "Paramètres publics de la boutique", responses: { 200: ok("Paramètres récupérés.", ref("Settings")) } },
+      get: {
+        tags: ["Catalogue"],
+        summary: "Paramètres publics de la boutique",
+        responses: { 200: ok("Paramètres récupérés.", ref("Settings")) },
+      },
       patch: {
         tags: ["Back-office"],
         summary: "Modifier les paramètres",
@@ -366,7 +417,12 @@ export const openApiDocument = {
       },
     },
     "/stock": {
-      get: { tags: ["Back-office"], summary: "État du stock par déclinaison", security: adminSecurity, responses: { 200: ok("Stock récupéré.", list("StockLevel")), ...errors } },
+      get: {
+        tags: ["Back-office"],
+        summary: "État du stock par déclinaison",
+        security: adminSecurity,
+        responses: { 200: ok("Stock récupéré.", list("StockLevel")), ...errors },
+      },
     },
     "/stock/export": {
       get: {
@@ -386,22 +442,52 @@ export const openApiDocument = {
       },
     },
     "/stats/dashboard": {
-      get: { tags: ["Back-office"], summary: "Indicateurs du jour", security: adminSecurity, responses: { 200: ok("Indicateurs récupérés.", ref("Dashboard")), ...errors } },
+      get: {
+        tags: ["Back-office"],
+        summary: "Indicateurs du jour",
+        security: adminSecurity,
+        responses: { 200: ok("Indicateurs récupérés.", ref("Dashboard")), ...errors },
+      },
     },
     "/stats/top-products": {
-      get: { tags: ["Back-office"], summary: "Sacs les plus vendus", security: adminSecurity, responses: { 200: ok("Classement récupéré.", { type: "array", items: { type: "object" } }), ...errors } },
+      get: {
+        tags: ["Back-office"],
+        summary: "Sacs les plus vendus",
+        security: adminSecurity,
+        responses: { 200: ok("Classement récupéré.", { type: "array", items: { type: "object" } }), ...errors },
+      },
     },
     "/clients": {
-      get: { tags: ["Back-office"], summary: "Lister les clientes", security: adminSecurity, responses: { 200: ok("Clients récupérés.", list("Client")), ...errors } },
+      get: {
+        tags: ["Back-office"],
+        summary: "Lister les clientes",
+        security: adminSecurity,
+        responses: { 200: ok("Clients récupérés.", list("Client")), ...errors },
+      },
     },
     "/clients/export": {
-      get: { tags: ["Back-office"], summary: "Exporter les clientes en CSV", security: adminSecurity, responses: { 200: { description: "Fichier CSV." }, ...errors } },
+      get: {
+        tags: ["Back-office"],
+        summary: "Exporter les clientes en CSV",
+        security: adminSecurity,
+        responses: { 200: { description: "Fichier CSV." }, ...errors },
+      },
     },
     "/addresses": {
-      get: { tags: ["Compte client"], summary: "Mon carnet d'adresses", security: adminSecurity, responses: { 200: ok("Adresses récupérées.", { type: "array", items: { type: "object" } }), ...errors } },
+      get: {
+        tags: ["Compte client"],
+        summary: "Mon carnet d'adresses",
+        security: adminSecurity,
+        responses: { 200: ok("Adresses récupérées.", { type: "array", items: { type: "object" } }), ...errors },
+      },
     },
     "/wishlist": {
-      get: { tags: ["Compte client"], summary: "Mes favoris", security: adminSecurity, responses: { 200: ok("Favoris récupérés.", list("Product")), ...errors } },
+      get: {
+        tags: ["Compte client"],
+        summary: "Mes favoris",
+        security: adminSecurity,
+        responses: { 200: ok("Favoris récupérés.", list("Product")), ...errors },
+      },
     },
   },
 
@@ -416,7 +502,10 @@ export const openApiDocument = {
           status: { type: "string", enum: ["fail", "error", "not_found", "unauthorized"] },
           message: { type: "string" },
           data: { type: "null" },
-          errors: { type: "array", items: { type: "object", properties: { field: { type: "string" }, message: { type: "string" } } } },
+          errors: {
+            type: "array",
+            items: { type: "object", properties: { field: { type: "string" }, message: { type: "string" } } },
+          },
         },
       },
       PaginationMeta: {
@@ -482,7 +571,12 @@ export const openApiDocument = {
       CategoryInput: {
         type: "object",
         required: ["name", "image"],
-        properties: { name: { type: "string" }, slug: { type: "string" }, image: { type: "string" }, position: { type: "integer" } },
+        properties: {
+          name: { type: "string" },
+          slug: { type: "string" },
+          image: { type: "string" },
+          position: { type: "integer" },
+        },
       },
       ProductVariant: {
         type: "object",
@@ -492,7 +586,10 @@ export const openApiDocument = {
           color: { type: "string" },
           colorSlug: { type: "string" },
           hex: { type: "string", example: "#1a1a1a" },
-          images: { type: "array", items: { type: "object", properties: { url: { type: "string" }, alt: { type: "string" } } } },
+          images: {
+            type: "array",
+            items: { type: "object", properties: { url: { type: "string" }, alt: { type: "string" } } },
+          },
           stock: { type: "object", properties: { qty: { type: "integer" }, threshold: { type: "integer" } } },
           available: { type: "boolean" },
         },
@@ -571,7 +668,10 @@ export const openApiDocument = {
         type: "object",
         properties: {
           id: { type: "string" },
-          publicToken: { type: "string", description: "Renvoyé uniquement à la création : sert à relire le reçu sans compte." },
+          publicToken: {
+            type: "string",
+            description: "Renvoyé uniquement à la création : sert à relire le reçu sans compte.",
+          },
           client: { type: "string" },
           phone: { type: "string" },
           email: { type: "string" },
@@ -587,7 +687,10 @@ export const openApiDocument = {
           total: { type: "integer" },
           pay: { type: "string", enum: ["Payé", "En attente", "Échoué"] },
           method: { type: "string", enum: ["Paiement à la livraison"] },
-          status: { type: "string", enum: ["En préparation", "Expédiée", "En cours de livraison", "Livrée", "Retournée"] },
+          status: {
+            type: "string",
+            enum: ["En préparation", "Expédiée", "En cours de livraison", "Livrée", "Retournée"],
+          },
           date: { type: "string", format: "date-time" },
         },
       },
@@ -610,7 +713,11 @@ export const openApiDocument = {
           items: {
             type: "array",
             minItems: 1,
-            items: { type: "object", required: ["variantId", "qty"], properties: { variantId: { type: "string" }, qty: { type: "integer" } } },
+            items: {
+              type: "object",
+              required: ["variantId", "qty"],
+              properties: { variantId: { type: "string" }, qty: { type: "integer" } },
+            },
           },
         },
       },
@@ -729,7 +836,12 @@ export const openApiDocument = {
       },
       Media: {
         type: "object",
-        properties: { url: { type: "string", format: "uri" }, publicId: { type: "string" }, width: { type: "integer" }, height: { type: "integer" } },
+        properties: {
+          url: { type: "string", format: "uri" },
+          publicId: { type: "string" },
+          width: { type: "integer" },
+          height: { type: "integer" },
+        },
       },
       StockLevel: {
         type: "object",

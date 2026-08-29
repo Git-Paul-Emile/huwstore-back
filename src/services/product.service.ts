@@ -140,7 +140,10 @@ export const productService = {
       };
     }
     if (query.minPrice !== undefined || query.maxPrice !== undefined) {
-      where.price = { ...(query.minPrice !== undefined && { gte: query.minPrice }), ...(query.maxPrice !== undefined && { lte: query.maxPrice }) };
+      where.price = {
+        ...(query.minPrice !== undefined && { gte: query.minPrice }),
+        ...(query.maxPrice !== undefined && { lte: query.maxPrice }),
+      };
     }
     if (query.search) {
       where.OR = [

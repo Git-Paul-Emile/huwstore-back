@@ -13,7 +13,8 @@ export const orderRepository = {
 
   count: (where: Prisma.OrderWhereInput) => prisma.order.count({ where }),
 
-  findByUserId: (userId: string) => prisma.order.findMany({ where: { userId }, include, orderBy: { createdAt: "desc" } }),
+  findByUserId: (userId: string) =>
+    prisma.order.findMany({ where: { userId }, include, orderBy: { createdAt: "desc" } }),
 
   findById: (id: string) => prisma.order.findUnique({ where: { id }, include }),
 

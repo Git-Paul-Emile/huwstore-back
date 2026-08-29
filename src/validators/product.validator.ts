@@ -16,42 +16,43 @@ export const variantSchema = z.object({
   stockThreshold: z.number().int().nonnegative().default(5),
 });
 
-export const productSchema = z.object({
-  id: z.string().regex(slugPattern).optional(),
-  slug: z.string().regex(slugPattern).optional(),
-  name: z.string().min(1),
-  collection: z.string().min(1),
-  categoryId: z.string().min(1),
-  material: z.string().min(1),
-  description: z.string().min(1, "La description est requise."),
-  care: z.string().min(1, "Les conseils d'entretien sont requis."),
-  price: z.number().int().positive(),
-  compareAt: z.number().int().positive().optional(),
-  badge: productBadgeLabel.optional(),
-  videoUrl: z.string().min(1).optional(),
+export const productSchema = z
+  .object({
+    id: z.string().regex(slugPattern).optional(),
+    slug: z.string().regex(slugPattern).optional(),
+    name: z.string().min(1),
+    collection: z.string().min(1),
+    categoryId: z.string().min(1),
+    material: z.string().min(1),
+    description: z.string().min(1, "La description est requise."),
+    care: z.string().min(1, "Les conseils d'entretien sont requis."),
+    price: z.number().int().positive(),
+    compareAt: z.number().int().positive().optional(),
+    badge: productBadgeLabel.optional(),
+    videoUrl: z.string().min(1).optional(),
 
-  // Caractéristiques physiques, en millimètres et en grammes.
-  closure: z.string().optional(),
-  capacity: z.string().optional(),
-  widthTopMm: z.number().int().positive().optional(),
-  widthBottomMm: z.number().int().positive().optional(),
-  heightMm: z.number().int().positive().optional(),
-  depthMm: z.number().int().positive().optional(),
-  handleDropMm: z.number().int().positive().optional(),
-  weightGrams: z.number().int().positive().optional(),
-  features: z.array(z.string().min(1)).default([]),
-  /** Ex. "Livré avec une pochette assortie" - vide si le modèle n'a pas d'accessoire inclus. */
-  includedAccessory: z.string().min(1).optional(),
+    // Caractéristiques physiques, en millimètres et en grammes.
+    closure: z.string().optional(),
+    capacity: z.string().optional(),
+    widthTopMm: z.number().int().positive().optional(),
+    widthBottomMm: z.number().int().positive().optional(),
+    heightMm: z.number().int().positive().optional(),
+    depthMm: z.number().int().positive().optional(),
+    handleDropMm: z.number().int().positive().optional(),
+    weightGrams: z.number().int().positive().optional(),
+    features: z.array(z.string().min(1)).default([]),
+    /** Ex. "Livré avec une pochette assortie" - vide si le modèle n'a pas d'accessoire inclus. */
+    includedAccessory: z.string().min(1).optional(),
 
-  active: z.boolean().default(true),
-  variants: z.array(variantSchema).min(1, "Au moins une déclinaison couleur est requise."),
-})
+    active: z.boolean().default(true),
+    variants: z.array(variantSchema).min(1, "Au moins une déclinaison couleur est requise."),
+  })
   // Un même coloris ne peut pas être déclaré deux fois : la contrainte existe
   // en base, on la refuse ici pour renvoyer une 400 lisible plutôt qu'une 500.
-  .refine(
-    (input) => new Set(input.variants.map((v) => v.colorSlug)).size === input.variants.length,
-    { message: "Deux déclinaisons partagent le même coloris.", path: ["variants"] },
-  )
+  .refine((input) => new Set(input.variants.map((v) => v.colorSlug)).size === input.variants.length, {
+    message: "Deux déclinaisons partagent le même coloris.",
+    path: ["variants"],
+  })
   .refine((input) => input.compareAt === undefined || input.compareAt > input.price, {
     message: "Le prix barré doit être supérieur au prix de vente.",
     path: ["compareAt"],
@@ -102,9 +103,7 @@ const csvList = z
   .optional()
   .transform((value) => {
     if (value === undefined) return undefined;
-    const parts = (Array.isArray(value) ? value : value.split(","))
-      .map((part) => part.trim())
-      .filter(Boolean);
+    const parts = (Array.isArray(value) ? value : value.split(",")).map((part) => part.trim()).filter(Boolean);
     return parts.length > 0 ? parts : undefined;
   });
 

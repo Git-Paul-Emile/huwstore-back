@@ -11,8 +11,7 @@ export const settingRepository = {
    * Cree la ligne si elle n'existe pas encore, sinon la renvoie telle quelle.
    * Evite d'avoir a seeder la table pour que la boutique demarre.
    */
-  ensure: () =>
-    prisma.setting.upsert({ where: { id: SETTINGS_ID }, update: {}, create: { id: SETTINGS_ID } }),
+  ensure: () => prisma.setting.upsert({ where: { id: SETTINGS_ID }, update: {}, create: { id: SETTINGS_ID } }),
 
   update: (data: Prisma.SettingUpdateInput) => prisma.setting.update({ where: { id: SETTINGS_ID }, data }),
 };

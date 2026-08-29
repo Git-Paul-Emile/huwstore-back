@@ -8,7 +8,7 @@ const shop: SettingDto = {
   shopName: "HUWSTORE",
   phone: "70 966 62 59",
   whatsapp: "221709666259",
-  email: "contact@huwstore.sn",
+  email: "contact@huwstore.com",
   city: "Dakar",
   country: "Sénégal",
   addressLine: undefined,

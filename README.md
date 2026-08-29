@@ -42,13 +42,13 @@ entiers. L'affichage en centimètres se fait côté front (`cm()` dans `data.ts`
 
 ## Où se trouve le catalogue
 
-| Fichier | Rôle |
-|---|---|
-| `prisma/catalog.ts` | les produits réels, en données pures — c'est **ici** qu'on ajoute ou corrige un article |
-| `prisma/media.ts` | résolution des URLs d'images (Cloudinary ou fichiers locaux) |
-| `prisma/seed.ts` | écrit `catalog.ts` en base ; idempotent, relançable sans risque |
-| `scripts/media-manifest.json` | quelle photo source appartient à quel produit et à quel coloris |
-| `scripts/upload-media.ts` | envoie les images sur Cloudinary |
+| Fichier                       | Rôle                                                                                    |
+| ----------------------------- | --------------------------------------------------------------------------------------- |
+| `prisma/catalog.ts`           | les produits réels, en données pures — c'est **ici** qu'on ajoute ou corrige un article |
+| `prisma/media.ts`             | résolution des URLs d'images (Cloudinary ou fichiers locaux)                            |
+| `prisma/seed.ts`              | écrit `catalog.ts` en base ; idempotent, relançable sans risque                         |
+| `scripts/media-manifest.json` | quelle photo source appartient à quel produit et à quel coloris                         |
+| `scripts/upload-media.ts`     | envoie les images sur Cloudinary                                                        |
 
 ### Ajouter un produit
 
@@ -97,16 +97,16 @@ npx prisma migrate dev
 
 `GET /products` accepte filtres, recherche, tri et pagination :
 
-| Paramètre | Valeurs | Effet |
-|---|---|---|
-| `category` | nom ou slug | filtre par catégorie |
-| `material` | libellé exact | filtre par matière |
-| `color` | nom ou slug de coloris | produits ayant cette déclinaison |
-| `minPrice` / `maxPrice` | entier FCFA | fourchette de prix |
-| `search` | texte libre | nom, description, matière, collection |
-| `sort` | `featured`, `best`, `price-asc`, `price-desc`, `new` | tri (`best` = quantités réellement vendues) |
-| `page` / `limit` | entiers (`limit` ≤ 100) | pagination |
-| `all` | `true` | inclut les produits désactivés (admin) |
+| Paramètre               | Valeurs                                              | Effet                                       |
+| ----------------------- | ---------------------------------------------------- | ------------------------------------------- |
+| `category`              | nom ou slug                                          | filtre par catégorie                        |
+| `material`              | libellé exact                                        | filtre par matière                          |
+| `color`                 | nom ou slug de coloris                               | produits ayant cette déclinaison            |
+| `minPrice` / `maxPrice` | entier FCFA                                          | fourchette de prix                          |
+| `search`                | texte libre                                          | nom, description, matière, collection       |
+| `sort`                  | `featured`, `best`, `price-asc`, `price-desc`, `new` | tri (`best` = quantités réellement vendues) |
+| `page` / `limit`        | entiers (`limit` ≤ 100)                              | pagination                                  |
+| `all`                   | `true`                                               | inclut les produits désactivés (admin)      |
 
 La réponse suit l'enveloppe commune, la pagination vivant dans `meta` :
 
@@ -144,27 +144,27 @@ récupéré depuis `User`), puis passe les colonnes en `NOT NULL`.
 
 ### Nouvelles variables d'environnement
 
-| Variable | Rôle |
-| --- | --- |
+| Variable           | Rôle                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
 | `SHOP_ADMIN_EMAIL` | Destinataire des notifications de commande. Sans elle, aucune notification n'est envoyée (un avertissement est journalisé). |
-| `SITE_URL` | URL publique, utilisée dans les liens des e-mails. |
+| `SITE_URL`         | URL publique, utilisée dans les liens des e-mails.                                                                          |
 
 `RESEND_API_KEY` était déjà présente mais n'était utilisée nulle part : elle
 sert désormais réellement.
 
 ### Nouvelles routes
 
-| Méthode | Route | Accès |
-| --- | --- | --- |
-| `GET` | `/orders/:id` | Public — une commande rattachée à un compte n'est lisible que par ce compte. |
-| `GET` | `/orders/export` | Admin — export CSV des commandes filtrées. |
-| `POST` | `/promos/validate` | Public — vérifie un code contre un panier réel, sans rien écrire. |
-| `GET` | `/promos` | **Admin** (était public : tous les codes actifs étaient listables). |
-| `GET` `POST` `PATCH` `DELETE` | `/addresses` | Client connecté — carnet d'adresses. |
-| `GET` `POST` `DELETE` | `/wishlist` | Client connecté — favoris rattachés au compte. |
-| `GET` | `/reviews/product/:productId` | Public — avis publiés d'un produit. |
-| `GET` | `/reviews/mine` | Client connecté. |
-| `GET` | `/stats/top-products` | Admin — sacs les plus vendus (quantités réelles). |
+| Méthode                       | Route                         | Accès                                                                        |
+| ----------------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `GET`                         | `/orders/:id`                 | Public — une commande rattachée à un compte n'est lisible que par ce compte. |
+| `GET`                         | `/orders/export`              | Admin — export CSV des commandes filtrées.                                   |
+| `POST`                        | `/promos/validate`            | Public — vérifie un code contre un panier réel, sans rien écrire.            |
+| `GET`                         | `/promos`                     | **Admin** (était public : tous les codes actifs étaient listables).          |
+| `GET` `POST` `PATCH` `DELETE` | `/addresses`                  | Client connecté — carnet d'adresses.                                         |
+| `GET` `POST` `DELETE`         | `/wishlist`                   | Client connecté — favoris rattachés au compte.                               |
+| `GET`                         | `/reviews/product/:productId` | Public — avis publiés d'un produit.                                          |
+| `GET`                         | `/reviews/mine`               | Client connecté.                                                             |
+| `GET`                         | `/stats/top-products`         | Admin — sacs les plus vendus (quantités réelles).                            |
 
 ### Règle de calcul des montants
 
@@ -209,14 +209,14 @@ La migration :
 
 ### Securite
 
-| Regle (`rules/security.md`) | Mise en oeuvre |
-| --- | --- |
-| Rate limiting | `middlewares/rateLimit.ts` - 600 requetes / 15 min en general, 10 tentatives de connexion echouees / 15 min, 60 ecritures publiques / h. |
-| En-tetes de securite | `helmet` dans `config/app.ts`. |
-| JWT avec refresh token | `POST /auth/refresh` : le jeton d'acces vit 15 min, le cookie de rafraichissement 30 jours et tourne a chaque appel. |
-| Cookies HttpOnly | Le refresh token n'est jamais lisible par le JavaScript. Le front garde le jeton d'acces **en memoire**, plus dans `localStorage`. |
-| Protection CSRF | Double envoi (`mw-csrf` + en-tete `X-CSRF-Token`) sur les seules routes authentifiees par cookie. |
-| Moindre privilege | Le back-office est garde cote serveur (`requireAdmin`) **et** cote ecran (`RequireAdmin`). |
+| Regle (`rules/security.md`) | Mise en oeuvre                                                                                                                           |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Rate limiting               | `middlewares/rateLimit.ts` - 600 requetes / 15 min en general, 10 tentatives de connexion echouees / 15 min, 60 ecritures publiques / h. |
+| En-tetes de securite        | `helmet` dans `config/app.ts`.                                                                                                           |
+| JWT avec refresh token      | `POST /auth/refresh` : le jeton d'acces vit 15 min, le cookie de rafraichissement 30 jours et tourne a chaque appel.                     |
+| Cookies HttpOnly            | Le refresh token n'est jamais lisible par le JavaScript. Le front garde le jeton d'acces **en memoire**, plus dans `localStorage`.       |
+| Protection CSRF             | Double envoi (`mw-csrf` + en-tete `X-CSRF-Token`) sur les seules routes authentifiees par cookie.                                        |
+| Moindre privilege           | Le back-office est garde cote serveur (`requireAdmin`) **et** cote ecran (`RequireAdmin`).                                               |
 
 ### Observabilite
 
@@ -235,17 +235,17 @@ masquage des secrets. `middlewares/requestLogger.ts` mesure chaque requete
 
 ### Nouvelles routes
 
-| Methode | Route | Acces |
-| --- | --- | --- |
-| `POST` | `/auth/refresh` | Cookie + jeton anti-CSRF. |
-| `PATCH` | `/auth/me` | Client connecte - nom, e-mail, mot de passe. |
-| `POST` | `/orders` | **Public** - commander sans compte est possible. |
-| `GET` | `/orders/:id?token=...` | Acheteuse connectee, ou porteuse du jeton de lecture. |
-| `GET` | `/orders/:id/invoice` | Facture PDF, meme controle d'acces. |
-| `GET` `PATCH` | `/settings` | Lecture publique, ecriture admin. |
-| `POST` | `/media` | Admin - televersement d'image vers Cloudinary. |
-| `GET` | `/clients/export` | Admin - export CSV du fichier clientes. |
-| `GET` | `/stock/export` | Admin - export CSV de l'inventaire. |
+| Methode       | Route                   | Acces                                                 |
+| ------------- | ----------------------- | ----------------------------------------------------- |
+| `POST`        | `/auth/refresh`         | Cookie + jeton anti-CSRF.                             |
+| `PATCH`       | `/auth/me`              | Client connecte - nom, e-mail, mot de passe.          |
+| `POST`        | `/orders`               | **Public** - commander sans compte est possible.      |
+| `GET`         | `/orders/:id?token=...` | Acheteuse connectee, ou porteuse du jeton de lecture. |
+| `GET`         | `/orders/:id/invoice`   | Facture PDF, meme controle d'acces.                   |
+| `GET` `PATCH` | `/settings`             | Lecture publique, ecriture admin.                     |
+| `POST`        | `/media`                | Admin - televersement d'image vers Cloudinary.        |
+| `GET`         | `/clients/export`       | Admin - export CSV du fichier clientes.               |
+| `GET`         | `/stock/export`         | Admin - export CSV de l'inventaire.                   |
 
 ### Facture
 
@@ -272,8 +272,94 @@ normalisation des numeros de telephone, generation du CSV et de la facture.
 
 ### Variables d'environnement ajoutees
 
-| Variable | Role |
-| --- | --- |
-| `NODE_ENV` | `production` active les cookies `Secure`/`SameSite=None`, les journaux JSON et masque les traces. |
-| `ADMIN_PASSWORD` | Mot de passe du compte administrateur cree par `npm run seed`. Obligatoire en production. |
-| `LOG_LEVEL` | `debug`, `info`, `warn` ou `error`. |
+| Variable         | Role                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`       | `production` active les cookies `Secure`/`SameSite=None`, les journaux JSON et masque les traces. |
+| `ADMIN_PASSWORD` | Mot de passe du compte administrateur cree par `npm run seed`. Obligatoire en production.         |
+| `LOG_LEVEL`      | `debug`, `info`, `warn` ou `error`.                                                               |
+
+---
+
+## Mise à jour du 29 août 2026 — résilience, file de tâches, adaptateurs, SEO
+
+Cette version ferme les derniers écarts face au dossier `rules/` (hors CI/CD). Pas
+de migration, pas de dépendance d'infrastructure nouvelle.
+
+### Services externes derrière un port (`rules/external-services.md`)
+
+Le code métier ne connaît plus ni Resend ni Cloudinary, seulement deux
+interfaces :
+
+| Port                               | Adaptateurs                                  | Utilisé par     |
+| ---------------------------------- | -------------------------------------------- | --------------- |
+| `services/external/mailer.ts`      | `ResendMailer`, `LogMailer` (repli sans clé) | `mail.service`  |
+| `services/external/image-store.ts` | `CloudinaryImageStore`                       | `media.service` |
+
+Changer de fournisseur = un nouvel adaptateur, rien d'autre. `config/resend.ts`
+et `config/cloudinary.ts` restent les seuls fichiers qui importent le SDK.
+
+### Résilience des appels sortants (`rules/async.md`)
+
+`lib/resilience.ts` : **timeout** (aucun appel externe ne bloque), **retry** à
+backoff exponentiel + jitter, **circuit breaker** (on cesse d'appeler un
+fournisseur tombé). Façade `resilient()`, utilisée par les adaptateurs.
+
+### File de tâches (`rules/async.md`)
+
+`queue/job-queue.ts` : file en mémoire, concurrence bornée, **jobs idempotents**
+(clé), retry, lettre morte, métriques. Les e-mails de commande y passent
+(`queue/index.ts`) au lieu de retarder la réponse HTTP. `jobQueue.drain()` est
+appelé à l'arrêt (SIGTERM) pour ne pas perdre d'envoi.
+
+> Ce n'est pas une file durable : un redémarrage perd les jobs en attente.
+> Compromis assumé pour rester sans Redis ; l'API reste mono-instance.
+
+### Performance (`rules/performance.md`)
+
+- `middlewares/compression.ts` : Brotli/gzip des réponses, sans dépendance.
+- `lib/cache.ts` : cache TTL mémoire. Les paramètres boutique sont mis en cache
+  60 s (lus à chaque e-mail, facture et chargement de vitrine), invalidés à
+  l'écriture.
+
+### Observabilité (`rules/observability.md`)
+
+`config/monitoring.ts` : point de collecte unique des exceptions — tout le code
+passe par `monitoring.captureException`, jamais par le SDK directement.
+**Sentry** (`@sentry/node`) est branché : l'initialisation vit dans
+`src/instrument.ts`, chargé en tout premier par `index.ts` (avant Express et
+Prisma) pour l'instrumentation automatique des requêtes. Sans `SENTRY_DSN` dans
+l'environnement, Sentry reste éteint et seuls les journaux subsistent —
+retirer la variable suffit à le désactiver en local. `monitoring.flush()` est
+appelé avant chaque `process.exit()` pour ne pas perdre les derniers événements.
+`/health` expose l'état de la file, des services externes et du monitoring.
+
+### SEO (`rules/SEO.md`)
+
+`GET /sitemap.xml` (route à la racine, hors `/api`) : plan du site généré depuis
+la base — pages stables + chaque fiche produit active avec sa `lastmod`, mis en
+cache 10 min. En production, le front le réécrit vers l'API (`front/vercel.json`).
+`SITE_URL` doit valoir `https://huwstore.com`.
+
+### Bug corrigé
+
+Toute route inconnue sous `/api/v1/*` bouclait à l'infini sur la redirection de
+compatibilité `/api` → `/api/v1`. `config/app.ts` laisse maintenant ces requêtes
+tomber en 404.
+
+### Tests
+
+```bash
+npm test              # 79 tests unitaires + intégration HTTP, sans dépendance
+npm run test:integration   # base réelle, seulement si TEST_DATABASE_URL est défini
+```
+
+`src/http.test.ts` démarre l'app Express réelle et vérifie le contrat HTTP
+(enveloppe, redirections, en-têtes, validation, auth, CSRF, compression,
+sitemap). `src/order.itest.ts` prouve, contre une base jetable, que la commande
+décrémente le stock dans la même transaction.
+
+### Dépendances
+
+`bcrypt` passe en **6.x** (retire `node-pre-gyp`/`tar` vulnérables) ; un
+`overrides` force `deepmerge-ts@8` (faille via la CLI Prisma). `npm run audit` :
+0 vulnérabilité. Script `audit` ajouté (`npm audit --audit-level=high`).

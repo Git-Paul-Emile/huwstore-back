@@ -54,7 +54,10 @@ export const promoService = {
     const existing = await promoRepository.findById(id);
     if (!existing) throw AppError.notFound("Code promo introuvable.");
     const { type, ...rest } = input;
-    const promo = await promoRepository.update(id, { ...rest, ...(type ? { type: promoTypeMap.fromLabel(type) } : {}) });
+    const promo = await promoRepository.update(id, {
+      ...rest,
+      ...(type ? { type: promoTypeMap.fromLabel(type) } : {}),
+    });
     return toDto(promo);
   },
 

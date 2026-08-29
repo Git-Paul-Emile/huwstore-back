@@ -7,7 +7,6 @@ export { phoneSchema };
 const orderStatusLabel = z.enum(["En préparation", "Expédiée", "En cours de livraison", "Livrée", "Retournée"]);
 const payStatusLabel = z.enum(["Payé", "En attente", "Échoué"]);
 
-
 export const orderCreateSchema = z.object({
   client: z.string().trim().min(2, "Le nom complet est requis."),
   phone: phoneSchema,

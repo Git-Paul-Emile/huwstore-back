@@ -4,10 +4,16 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { router } from "../routes/index.js";
 import { docsRouter } from "../routes/docs.routes.js";
+import { sitemapRouter } from "../routes/sitemap.routes.js";
 import { errorHandler } from "../middlewares/errorHandler.js";
 import { notFound } from "../middlewares/notFound.js";
 import { requestLogger } from "../middlewares/requestLogger.js";
 import { globalLimiter } from "../middlewares/rateLimit.js";
+import { compression } from "../middlewares/compression.js";
+import { monitoring } from "./monitoring.js";
+import { jobQueue } from "../queue/index.js";
+import { getMailer } from "../services/external/mailer.js";
+import { getImageStore } from "../services/external/image-store.js";
 import { prisma } from "./database.js";
 
 /**
@@ -62,18 +68,39 @@ export function createApp() {
   // back-office. Au-delà, la requête est refusée avant d'occuper la mémoire.
   app.use(express.json({ limit: "12mb" }));
 
+  // Compression Brotli/gzip des réponses (rules/performance.md).
+  app.use(compression);
+
   app.use(requestLogger);
   app.use(globalLimiter);
 
-  /** Sonde de disponibilité : l'hébergeur et la supervision l'interrogent. */
+  /**
+   * Sonde de disponibilité (rules/observability.md) : l'hébergeur et la
+   * supervision l'interrogent. Elle expose aussi l'état de la file de tâches et
+   * des services externes, pour repérer une dérive avant qu'elle ne se voie.
+   */
   app.get("/health", async (_req, res) => {
+    const [mailer, imageStore] = await Promise.all([getMailer(), getImageStore()]);
+    const body = {
+      status: "ok" as "ok" | "degraded",
+      uptimeSeconds: Math.round(process.uptime()),
+      database: "up" as "up" | "down",
+      queue: jobQueue.stats(),
+      monitoring: { enabled: monitoring.enabled },
+      external: { mailer: mailer.health(), imageStore: imageStore.health() },
+    };
     try {
       await prisma.$queryRaw`SELECT 1`;
-      res.status(200).json({ status: "ok", database: "up", uptimeSeconds: Math.round(process.uptime()) });
     } catch {
-      res.status(503).json({ status: "degraded", database: "down" });
+      body.status = "degraded";
+      body.database = "down";
     }
+    res.status(body.status === "ok" ? 200 : 503).json(body);
   });
+
+  // Plan du site (rules/SEO.md) : servi à la racine du domaine via une
+  // réécriture Vercel côté front.
+  app.use("/sitemap.xml", sitemapRouter);
 
   // Documentation OpenAPI (rules/api.md).
   app.use(`${API_PREFIX}/docs`, docsRouter);
@@ -82,7 +109,12 @@ export function createApp() {
 
   // Compatibilité : l'ancienne base non versionnée redirige vers la version 1.
   // 308 conserve la méthode HTTP et le corps de la requête, contrairement à 301.
-  app.use("/api", (req, res) => res.redirect(308, `${API_PREFIX}${req.url}`));
+  // On NE redirige PAS ce qui cible déjà /api/v1 : une route v1 inconnue doit
+  // tomber en 404, pas boucler indéfiniment sur elle-même.
+  app.use("/api", (req, res, next) => {
+    if (req.url === "/v1" || req.url.startsWith("/v1/")) return next();
+    res.redirect(308, `${API_PREFIX}${req.url}`);
+  });
 
   app.use(notFound);
   app.use(errorHandler);

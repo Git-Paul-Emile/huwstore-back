@@ -154,8 +154,7 @@ export const products: ProductSeed[] = [
     price: 9000,
     description:
       "Fourre-tout pratique et polyvalent en tissu Oxford imperméable. Son format généreux et ses différents espaces permettent d'organiser facilement vos essentiels du quotidien. Il peut être porté à la main ou à l'épaule grâce à sa bandoulière ajustable.",
-    care:
-      "Nettoyer délicatement avec un chiffon humide. Ne pas laver en machine et éviter les produits nettoyants agressifs.",
+    care: "Nettoyer délicatement avec un chiffon humide. Ne pas laver en machine et éviter les produits nettoyants agressifs.",
     widthTopMm: 380,
     heightMm: 280,
     depthMm: 140,

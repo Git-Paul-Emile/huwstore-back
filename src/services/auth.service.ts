@@ -5,6 +5,15 @@ import { signAccessToken, signRefreshToken } from "../config/jwt.js";
 import type { loginSchema, profileUpdateSchema, registerSchema } from "../validators/auth.validator.js";
 import type { z } from "zod";
 
+/**
+ * Coût de hachage bcrypt. Chaque incrément double le temps de calcul : 12
+ * reste imperceptible à la connexion (~250 ms) tout en rendant une attaque par
+ * dictionnaire hors ligne beaucoup plus lente. Les hachages déjà en base
+ * portent leur propre coût, `bcrypt.compare` les relit : bumper cette valeur
+ * n'invalide aucun mot de passe existant.
+ */
+const BCRYPT_ROUNDS = 12;
+
 const toDto = (user: { id: string; name: string; phone: string; email: string | null; role: "CLIENT" | "ADMIN" }) => ({
   id: user.id,
   name: user.name,
@@ -28,7 +37,7 @@ export const authService = {
     const existing = await userRepository.findByPhone(input.phone);
     if (existing) throw AppError.conflict("Un compte existe déjà avec ce numéro.");
 
-    const passwordHash = await bcrypt.hash(input.password, 10);
+    const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
     const user = await userRepository.create({
       name: input.name,
       phone: input.phone,
@@ -84,7 +93,7 @@ export const authService = {
     if (input.newPassword) {
       const valid = await bcrypt.compare(input.currentPassword ?? "", user.passwordHash);
       if (!valid) throw AppError.badRequest("Mot de passe actuel incorrect.");
-      data.passwordHash = await bcrypt.hash(input.newPassword, 10);
+      data.passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
     }
 
     return toDto(await userRepository.update(userId, data));
