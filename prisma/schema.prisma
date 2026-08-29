@@ -229,16 +229,14 @@ model User {
 /// et discount sont recalcules par le serveur, et total en est la somme. Les
 /// garder tous les quatre permet de rejouer le calcul d'une commande ancienne
 /// meme si les frais de zone ou le code promo ont change depuis.
+///
+/// Toute commande est rattachee a un compte : la commande en invite n'est plus
+/// ouverte. Le recu et la facture ne sont donc lisibles que par leur acheteuse
+/// connectee.
 model Order {
   id     String @id @default(cuid())
-  userId String?
-  user   User?  @relation(fields: [userId], references: [id])
-
-  /// Jeton de lecture remis a l'acheteur au moment de la commande. Il autorise
-  /// la relecture du recu et le telechargement de la facture SANS compte : la
-  /// commande en invite devient possible sans pour autant ouvrir les commandes
-  /// a quiconque devine un identifiant.
-  publicToken String @unique @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
   // Coordonnees figees a l'instant de l'achat : le client peut modifier son
   // carnet d'adresses plus tard, la commande deja passee ne doit pas bouger.

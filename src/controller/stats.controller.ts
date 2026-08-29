@@ -9,6 +9,14 @@ export const statsController = {
     jsonResponse(res, StatusCodes.OK, "success", "Indicateurs récupérés.", dashboard);
   }),
 
+  overview: controllerWrapper(async (req, res) => {
+    const days = Number(req.query.days ?? 30);
+    const overview = await statsService.overview(
+      Number.isFinite(days) && days > 0 ? Math.min(days, 365) : 30,
+    );
+    jsonResponse(res, StatusCodes.OK, "success", "Chiffres clés récupérés.", overview);
+  }),
+
   sales7: controllerWrapper(async (_req, res) => {
     const sales = await statsService.salesLast7Days();
     jsonResponse(res, StatusCodes.OK, "success", "Ventes des 7 derniers jours récupérées.", sales);

@@ -6,6 +6,7 @@ export const statsRoutes = Router();
 
 statsRoutes.use(requireAuth, requireAdmin);
 statsRoutes.get("/dashboard", statsController.dashboard);
+statsRoutes.get("/overview", statsController.overview);
 statsRoutes.get("/sales-7-days", statsController.sales7);
 statsRoutes.get("/sales-by-category", statsController.salesByCategory);
 statsRoutes.get("/top-products", statsController.topProducts);

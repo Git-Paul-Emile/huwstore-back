@@ -39,8 +39,6 @@ const toDto = (order: OrderWithItems) => ({
   courier: order.courier ?? undefined,
   tracking: order.tracking ?? undefined,
   note: order.note ?? undefined,
-  /** Vrai quand la commande a ete passee sans compte. */
-  guest: order.userId === null,
   date: order.createdAt,
 });
 
@@ -111,36 +109,24 @@ export const orderService = {
   },
 
   /**
-   * Lecture d'une commande par son acheteur.
+   * Lecture d'une commande par son acheteuse.
    *
-   * Deux cas legitimes, et deux seulement :
-   *  - la commande appartient au compte connecte ;
-   *  - le visiteur presente le jeton de lecture remis a l'achat (commande en
-   *    invite), que lui seul possede.
-   *
-   * Tout le reste repond « introuvable » plutot que « interdit » : repondre
-   * « interdit » confirmerait a un curieux que l'identifiant existe.
+   * Un seul cas legitime : la commande appartient au compte connecte. Tout le
+   * reste repond « introuvable » plutot que « interdit » : repondre « interdit »
+   * confirmerait a un curieux que l'identifiant existe.
    */
-  async getForBuyer(id: string, access: { userId?: string | null; token?: string | null }) {
+  async getOwnedOrder(id: string, userId: string) {
     const order = await orderRepository.findById(id);
-    if (!order) throw AppError.notFound("Commande introuvable.");
-
-    const ownedByUser = Boolean(access.userId) && order.userId === access.userId;
-    const openedByToken = Boolean(access.token) && order.publicToken === access.token;
-    if (!ownedByUser && !openedByToken) throw AppError.notFound("Commande introuvable.");
-
+    if (!order || order.userId !== userId) throw AppError.notFound("Commande introuvable.");
     return toDto(order);
   },
 
   /**
-   * Enregistrement d'une commande.
-   *
-   * `userId` peut etre nul : la boutique accepte les commandes SANS COMPTE
-   * (recueil de besoins). Dans ce cas la commande n'est rattachee a personne,
-   * et c'est le jeton de lecture renvoye ici - puis rappele dans l'e-mail de
-   * confirmation - qui permettra a l'acheteuse de retrouver son recu.
+   * Enregistrement d'une commande. `userId` est toujours renseigne : la
+   * commande en invite n'est plus ouverte, la commande est rattachee au compte
+   * connecte et apparait dans son historique.
    */
-  async create(input: z.infer<typeof orderCreateSchema>, userId: string | null) {
+  async create(input: z.infer<typeof orderCreateSchema>, userId: string) {
     // Un seul point de calcul : disponibilite, prix, frais de port et remise.
     const quote = await pricingService.quote({
       items: input.items,
@@ -167,7 +153,7 @@ export const orderService = {
         promoCode: quote.promoCode,
         total: quote.total,
         ...(input.deliveryZoneId ? { deliveryZone: { connect: { id: input.deliveryZoneId } } } : {}),
-        ...(userId ? { user: { connect: { id: userId } } } : {}),
+        user: { connect: { id: userId } },
         items: {
           create: quote.lines.map((line) => ({
             product: { connect: { id: line.productId } },
@@ -183,19 +169,17 @@ export const orderService = {
       quote.promoCode,
     );
 
-    logger.info({ orderId: order.id, total: order.total, guest: userId === null }, "Commande enregistrée");
+    logger.info({ orderId: order.id, total: order.total }, "Commande enregistrée");
 
     const dto = toDto(order);
-    const mailPayload = { ...dto, publicToken: order.publicToken };
 
     // Les e-mails partent dans la file de tâches : la vente est acquise, elle
     // ne doit pas attendre - ni échouer si - l'envoi. La clé d'idempotence
     // garantit qu'un même e-mail n'est jamais envoyé deux fois.
-    jobQueue.enqueue(JOBS.orderNotifyShop, mailPayload, { idempotencyKey: `notify-shop:${order.id}` });
-    jobQueue.enqueue(JOBS.orderConfirmClient, mailPayload, { idempotencyKey: `confirm-client:${order.id}` });
+    jobQueue.enqueue(JOBS.orderNotifyShop, dto, { idempotencyKey: `notify-shop:${order.id}` });
+    jobQueue.enqueue(JOBS.orderConfirmClient, dto, { idempotencyKey: `confirm-client:${order.id}` });
 
-    // Le jeton n'est renvoye QU'ICI, a celle qui vient de commander.
-    return { ...dto, publicToken: order.publicToken };
+    return dto;
   },
 
   async update(id: string, input: z.infer<typeof orderUpdateSchema>) {

@@ -41,7 +41,6 @@ const order: OrderDto = {
   courier: undefined,
   tracking: undefined,
   note: undefined,
-  guest: true,
   date: new Date("2026-08-28T10:00:00.000Z"),
 };
 

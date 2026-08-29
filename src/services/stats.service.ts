@@ -69,6 +69,30 @@ export const statsService = {
     });
   },
 
+  /**
+   * Chiffres cles sur une fenetre glissante (recueil de besoins : « Nombre de
+   * commandes, Chiffre d'affaires »). `days` est borne par le controleur.
+   * `avgBasket` se calcule sur les commandes ENCAISSEES : un panier moyen qui
+   * compterait les commandes en attente de paiement serait trompeur.
+   */
+  async overview(days: number) {
+    const since = new Date(Date.now() - days * DAY_MS);
+    const [all, paid, items] = await statsRepository.overviewSince(since);
+
+    const paidOrders = paid._count;
+    const paidRevenue = paid._sum.total ?? 0;
+
+    return {
+      periodDays: days,
+      orders: all._count,
+      revenue: all._sum.total ?? 0,
+      paidOrders,
+      paidRevenue,
+      itemsSold: items._sum.qty ?? 0,
+      avgBasket: Math.round(paidRevenue / Math.max(1, paidOrders)),
+    };
+  },
+
   async dashboard() {
     const since = new Date(Date.now() - DAY_MS);
     const [revenue, pending, stockLevels, newClients] = await Promise.all([

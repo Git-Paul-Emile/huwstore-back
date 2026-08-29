@@ -256,12 +256,38 @@ export const productService = {
     const existing = await productRepository.findById(id);
     if (!existing) throw AppError.notFound("Produit introuvable.");
 
-    const { categoryId, badge, ...rest } = input;
+    const { categoryId, badge, variants, ...rest } = input;
 
-    const product = await productRepository.update(id, {
+    const productData: Prisma.ProductUpdateInput = {
       ...rest,
       ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
       ...(badge !== undefined ? { badge: badge ? productBadgeMap.fromLabel(badge) : null } : {}),
+    };
+
+    // Sans bloc `variants`, on ne touche qu'à la fiche : c'est le cas courant
+    // (changement de prix, de description, activation/désactivation).
+    if (!variants) {
+      return toDto(await productRepository.update(id, productData));
+    }
+
+    // Avec `variants` : la liste reçue EST l'état voulu. Les coloris existants
+    // qui n'y figurent plus sont archivés, jamais supprimés.
+    const keptIds = new Set(variants.map((v) => v.id).filter((v): v is string => Boolean(v)));
+    const archiveIds = existing.variants.filter((v) => !keptIds.has(v.id)).map((v) => v.id);
+
+    const product = await productRepository.updateWithVariants(id, productData, {
+      productName: rest.name ?? existing.name,
+      archiveIds,
+      variants: variants.map((variant, position) => ({
+        id: variant.id,
+        colorName: variant.color,
+        colorSlug: variant.colorSlug,
+        hex: variant.hex,
+        hexSecondary: variant.hexSecondary ?? null,
+        position,
+        threshold: variant.stockThreshold,
+        images: variant.images,
+      })),
     });
 
     return toDto(product);

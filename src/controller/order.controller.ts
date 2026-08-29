@@ -9,10 +9,6 @@ import { toCsv } from "../services/csv.service.js";
 import { invoiceService } from "../services/invoice.service.js";
 import { settingService } from "../services/setting.service.js";
 
-/** Jeton de lecture presente par un acheteur sans compte (?token=...). */
-const readToken = (req: { query: Record<string, unknown> }) =>
-  typeof req.query.token === "string" ? req.query.token : null;
-
 export const orderController = {
   list: controllerWrapper(async (req, res) => {
     const query = orderListQuerySchema.parse(req.query);
@@ -28,27 +24,23 @@ export const orderController = {
 
   /**
    * Consultation d'une commande. Sert au recu affiche juste apres l'achat et a
-   * l'historique du compte. Deux acces legitimes : le compte proprietaire, ou
-   * le jeton de lecture remis a l'achat pour une commande passee en invite.
+   * l'historique du compte : seule l'acheteuse connectee, proprietaire de la
+   * commande, y a acces.
    */
   getOne: controllerWrapper(async (req, res) => {
-    const order = await orderService.getForBuyer(getParam(req, "id"), {
-      userId: req.user?.userId ?? null,
-      token: readToken(req),
-    });
+    if (!req.user) throw AppError.unauthorized();
+    const order = await orderService.getOwnedOrder(getParam(req, "id"), req.user.userId);
     jsonResponse(res, StatusCodes.OK, "success", "Commande récupérée.", order);
   }),
 
   /**
    * Facture PDF. Meme controle d'acces que le recu : une facture porte le nom,
    * le telephone et l'adresse de l'acheteuse, elle ne doit jamais etre lisible
-   * par un tiers qui devinerait un identifiant.
+   * par un tiers.
    */
   invoice: controllerWrapper(async (req, res) => {
-    const order = await orderService.getForBuyer(getParam(req, "id"), {
-      userId: req.user?.userId ?? null,
-      token: readToken(req),
-    });
+    if (!req.user) throw AppError.unauthorized();
+    const order = await orderService.getOwnedOrder(getParam(req, "id"), req.user.userId);
     const shop = await settingService.get();
     const pdf = invoiceService.build(order, shop);
 
@@ -91,13 +83,13 @@ export const orderController = {
   }),
 
   /**
-   * Passage de commande, avec ou sans compte. `req.user` est renseigne quand la
-   * cliente est connectee (optionalAuth) : la commande lui est alors rattachee
-   * et apparaitra dans son historique.
+   * Passage de commande. `requireAuth` garantit `req.user` : la commande est
+   * rattachee au compte connecte et apparait dans son historique.
    */
   create: controllerWrapper(async (req, res) => {
+    if (!req.user) throw AppError.unauthorized();
     const input = orderCreateSchema.parse(req.body);
-    const order = await orderService.create(input, req.user?.userId ?? null);
+    const order = await orderService.create(input, req.user.userId);
     jsonResponse(res, StatusCodes.CREATED, "success", "Commande créée.", order);
   }),
 

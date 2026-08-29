@@ -1,4 +1,4 @@
-import { prisma } from "../config/database.js";
+import { prisma, TX_OPTIONS } from "../config/database.js";
 import type { Prisma } from "@prisma/client";
 
 const include = { items: true } satisfies Prisma.OrderInclude;
@@ -56,5 +56,5 @@ export const orderRepository = {
       }
 
       return created;
-    }),
+    }, TX_OPTIONS),
 };

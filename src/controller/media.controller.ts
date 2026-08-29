@@ -8,6 +8,6 @@ export const mediaController = {
   upload: controllerWrapper(async (req, res) => {
     const input = mediaUploadSchema.parse(req.body);
     const media = await mediaService.upload(input);
-    jsonResponse(res, StatusCodes.CREATED, "success", "Image téléversée.", media);
+    jsonResponse(res, StatusCodes.CREATED, "success", "Média téléversé.", media);
   }),
 };

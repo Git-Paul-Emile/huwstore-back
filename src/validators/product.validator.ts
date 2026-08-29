@@ -16,6 +16,22 @@ export const variantSchema = z.object({
   stockThreshold: z.number().int().nonnegative().default(5),
 });
 
+/**
+ * Déclinaison en MISE À JOUR. `id` présent = coloris existant (on modifie ses
+ * libellés et sa galerie) ; `id` absent = nouveau coloris. La quantité en stock
+ * n'y figure pas : elle se pilote depuis l'écran Stock, pour que chaque
+ * variation laisse un mouvement tracé.
+ */
+export const variantUpdateSchema = z.object({
+  id: z.string().min(1).optional(),
+  color: z.string().min(1, "Le nom de la couleur est requis."),
+  colorSlug: z.string().regex(slugPattern, "Slug invalide (minuscules, chiffres et tirets)."),
+  hex: z.string().regex(hexPattern, "Couleur hexadécimale attendue, ex. #1a1a1a."),
+  hexSecondary: z.string().regex(hexPattern).optional(),
+  images: z.array(z.string().min(1)).default([]),
+  stockThreshold: z.number().int().nonnegative().default(5),
+});
+
 export const productSchema = z
   .object({
     id: z.string().regex(slugPattern).optional(),
@@ -58,7 +74,11 @@ export const productSchema = z
     path: ["compareAt"],
   });
 
-/** La mise à jour ne touche pas aux déclinaisons : elles ont leurs propres routes. */
+/**
+ * Mise à jour d'une fiche produit. `variants`, s'il est fourni, décrit l'état
+ * complet voulu des coloris : ceux absents de la liste sont archivés (jamais
+ * supprimés - des commandes y font référence).
+ */
 export const productUpdateSchema = z
   .object({
     name: z.string().min(1).optional(),
@@ -83,6 +103,13 @@ export const productUpdateSchema = z
     features: z.array(z.string().min(1)).optional(),
     includedAccessory: z.string().min(1).nullable().optional(),
     active: z.boolean().optional(),
+    variants: z
+      .array(variantUpdateSchema)
+      .min(1, "Au moins une déclinaison couleur est requise.")
+      .refine((variants) => new Set(variants.map((v) => v.colorSlug)).size === variants.length, {
+        message: "Deux déclinaisons partagent le même coloris.",
+      })
+      .optional(),
   })
   .strict();
 

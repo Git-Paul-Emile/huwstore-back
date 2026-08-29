@@ -47,4 +47,23 @@ export const statsRepository = {
   newClientsSince: (since: Date) => prisma.user.count({ where: { role: "CLIENT", createdAt: { gte: since } } }),
   revenueSince: (since: Date) =>
     prisma.order.aggregate({ where: { createdAt: { gte: since } }, _sum: { total: true } }),
+
+  /**
+   * Agregats sur une fenetre : toutes les commandes de la periode, celles
+   * reellement encaissees (pay = PAYE), et le nombre d'articles vendus. Calcule
+   * en base, jamais a partir d'une page chargee cote client.
+   */
+  overviewSince: (since: Date) =>
+    Promise.all([
+      prisma.order.aggregate({ where: { createdAt: { gte: since } }, _sum: { total: true }, _count: true }),
+      prisma.order.aggregate({
+        where: { createdAt: { gte: since }, pay: "PAYE" },
+        _sum: { total: true },
+        _count: true,
+      }),
+      prisma.orderItem.aggregate({
+        where: { order: { createdAt: { gte: since } } },
+        _sum: { qty: true },
+      }),
+    ]),
 };

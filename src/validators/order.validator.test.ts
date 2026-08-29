@@ -19,7 +19,7 @@ describe("orderCreateSchema", () => {
     assert.equal(parsed.phone, "771234567");
   });
 
-  it("n'exige pas d'adresse e-mail : commander sans compte reste possible", () => {
+  it("n'exige pas d'adresse e-mail dans le corps : le compte connecté porte déjà le contact", () => {
     assert.doesNotThrow(() => orderCreateSchema.parse(valide));
   });
 

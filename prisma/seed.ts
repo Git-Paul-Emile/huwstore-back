@@ -319,7 +319,7 @@ async function seedBackOffice() {
         {
           author: "Mariama Sow",
           role: "Cliente à Thiès",
-          text: "Commande passée sans compte, reçue en 72 h comme annoncé. Le tote bag est parfait pour le quotidien.",
+          text: "Commande reçue en 72 h comme annoncé. Le tote bag est parfait pour le quotidien.",
           position: 2,
           active: true,
         },

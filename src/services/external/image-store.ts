@@ -17,6 +17,8 @@ export type ImageUploadInput = {
   folder: string;
   /** Libellé facultatif, transformé en identifiant lisible. */
   label?: string;
+  /** Type de média. Par défaut une image. */
+  resourceType?: "image" | "video";
 };
 
 export type StoredImage = {
@@ -59,27 +61,38 @@ export class CloudinaryImageStore implements ImageStore {
       throw AppError.badRequest("Le stockage d'images n'est pas configuré (CLOUDINARY_URL manquante).");
     }
 
+    const isVideo = input.resourceType === "video";
+
     try {
       const result = await resilient(
         {
           label: "cloudinary.uploader.upload",
-          timeoutMs: 20_000,
+          // Une vidéo pèse plus lourd et Cloudinary la transcode : plus de temps,
+          // mais AUCUN réessai - renvoyer 40 Mo une seconde fois ferait patienter
+          // la boutique pour rien.
+          timeoutMs: isVideo ? 60_000 : 20_000,
           breaker: this.breaker,
-          retry: { attempts: 2, baseDelayMs: 500 },
+          retry: isVideo ? false : { attempts: 2, baseDelayMs: 500 },
         },
         () =>
           this.uploader.upload(input.file, {
             folder: `huwstore/${input.folder}`,
             ...(input.label ? { public_id: `${slugify(input.label)}-${Date.now()}` } : {}),
-            resource_type: "image",
+            resource_type: isVideo ? "video" : "image",
             overwrite: false,
-            transformation: [
-              { width: MAX_IMAGE_SIDE_PX, height: MAX_IMAGE_SIDE_PX, crop: "limit", quality: "auto:good" },
-            ],
+            // La photo est bornée en pixels et servie en `auto:good` ; la vidéo
+            // est déposée telle quelle (Cloudinary sert la variante adaptée).
+            ...(isVideo
+              ? {}
+              : {
+                  transformation: [
+                    { width: MAX_IMAGE_SIDE_PX, height: MAX_IMAGE_SIDE_PX, crop: "limit", quality: "auto:good" },
+                  ],
+                }),
           }),
       );
 
-      logger.info({ publicId: result.public_id, bytes: result.bytes }, "Image téléversée");
+      logger.info({ publicId: result.public_id, bytes: result.bytes, kind: isVideo ? "video" : "image" }, "Média téléversé");
       return {
         url: result.secure_url,
         publicId: result.public_id,
@@ -88,8 +101,12 @@ export class CloudinaryImageStore implements ImageStore {
       };
     } catch (error) {
       if (error instanceof AppError) throw error;
-      logger.error({ err: error }, "Échec du téléversement de l'image");
-      throw AppError.badRequest("L'image n'a pas pu être envoyée. Réessayez dans un instant.");
+      logger.error({ err: error, kind: isVideo ? "video" : "image" }, "Échec du téléversement du média");
+      throw AppError.badRequest(
+        isVideo
+          ? "La vidéo n'a pas pu être envoyée. Réessayez dans un instant."
+          : "L'image n'a pas pu être envoyée. Réessayez dans un instant.",
+      );
     }
   }
 

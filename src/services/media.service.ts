@@ -18,6 +18,11 @@ import type { z } from "zod";
 export const mediaService = {
   async upload(input: z.infer<typeof mediaUploadSchema>) {
     const store = await getImageStore();
-    return store.upload({ file: input.file, folder: input.folder, label: input.label });
+    return store.upload({
+      file: input.file,
+      folder: input.folder,
+      label: input.label,
+      resourceType: input.kind,
+    });
   },
 };

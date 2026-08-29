@@ -58,16 +58,28 @@ describe("enveloppe & routage", () => {
 });
 
 describe("validation & authentification", () => {
-  it("refuse une commande au corps invalide avant tout accès base (400 + détails)", async () => {
-    const response = await call("/api/v1/orders", {
+  it("refuse un avis au corps invalide avant tout accès base (400 + détails)", async () => {
+    // Route publique avec validateur : la validation Zod doit rejeter avant
+    // toute écriture en base.
+    const response = await call("/api/v1/feedback", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ items: [] }),
+      body: JSON.stringify({}),
     });
     assert.equal(response.status, 400);
     const body = await response.json();
     assert.equal(body.status, "fail");
     assert.ok(Array.isArray(body.errors));
+  });
+
+  it("exige un jeton pour passer une commande (401)", async () => {
+    const response = await call("/api/v1/orders", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ items: [{ variantId: "v1", qty: 1 }] }),
+    });
+    assert.equal(response.status, 401);
+    assert.equal((await response.json()).status, "unauthorized");
   });
 
   it("exige un jeton sur la liste des commandes (401)", async () => {

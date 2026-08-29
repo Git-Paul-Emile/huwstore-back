@@ -252,9 +252,10 @@ export const openApiDocument = {
       post: {
         tags: ["Commandes"],
         summary: "Passer une commande",
+        security: adminSecurity,
         description:
-          "Accessible **avec ou sans compte**. Connectée, la commande est rattachée au compte ; " +
-          "en invité, la réponse contient un `publicToken` qui seul permet de relire le reçu.\n\n" +
+          "Réservée au compte connecté : la commande en invité n'est plus ouverte. " +
+          "La commande est rattachée au compte et apparaît dans son historique.\n\n" +
           "Les montants ne sont jamais lus depuis la requête : le serveur recalcule prix, frais de port et remise.",
         requestBody: { required: true, ...json(ref("OrderInput")) },
         responses: { 201: ok("Commande créée.", ref("Order")), ...errors },
@@ -283,16 +284,9 @@ export const openApiDocument = {
       get: {
         tags: ["Commandes"],
         summary: "Consulter une commande",
-        description: "Soit connecté et propriétaire de la commande, soit muni du `token` de lecture remis à l'achat.",
-        parameters: [
-          idParam,
-          {
-            name: "token",
-            in: "query",
-            schema: { type: "string" },
-            description: "Jeton de lecture (commande en invité).",
-          },
-        ],
+        security: adminSecurity,
+        description: "Réservée au compte connecté, propriétaire de la commande.",
+        parameters: [idParam],
         responses: { 200: ok("Commande récupérée.", ref("Order")), ...errors },
       },
       patch: {
@@ -308,7 +302,8 @@ export const openApiDocument = {
       get: {
         tags: ["Commandes"],
         summary: "Télécharger la facture PDF",
-        parameters: [idParam, { name: "token", in: "query", schema: { type: "string" } }],
+        security: adminSecurity,
+        parameters: [idParam],
         responses: {
           200: {
             description: "Facture PDF.",
@@ -409,11 +404,13 @@ export const openApiDocument = {
     "/media": {
       post: {
         tags: ["Back-office"],
-        summary: "Téléverser une image",
-        description: "Reçoit un fichier encodé en base64 (`data:image/...;base64,…`) et le dépose sur Cloudinary.",
+        summary: "Téléverser une image ou une vidéo",
+        description:
+          "Reçoit un fichier encodé en base64 (`data:image/...` jusqu'à 8 Mo, ou `data:video/...` jusqu'à 40 Mo) " +
+          "et le dépose sur Cloudinary.",
         security: adminSecurity,
         requestBody: { required: true, ...json(ref("MediaInput")) },
-        responses: { 201: ok("Image téléversée.", ref("Media")), ...errors },
+        responses: { 201: ok("Média téléversé.", ref("Media")), ...errors },
       },
     },
     "/stock": {
@@ -455,6 +452,18 @@ export const openApiDocument = {
         summary: "Sacs les plus vendus",
         security: adminSecurity,
         responses: { 200: ok("Classement récupéré.", { type: "array", items: { type: "object" } }), ...errors },
+      },
+    },
+    "/stats/overview": {
+      get: {
+        tags: ["Back-office"],
+        summary: "Chiffres clés sur une fenêtre glissante",
+        description: "Nombre de commandes, chiffre d'affaires, panier moyen et articles vendus sur `days` jours.",
+        security: adminSecurity,
+        parameters: [
+          { name: "days", in: "query", schema: { type: "integer", default: 30, minimum: 1, maximum: 365 } },
+        ],
+        responses: { 200: ok("Chiffres clés récupérés.", { type: "object" }), ...errors },
       },
     },
     "/clients": {
@@ -668,10 +677,6 @@ export const openApiDocument = {
         type: "object",
         properties: {
           id: { type: "string" },
-          publicToken: {
-            type: "string",
-            description: "Renvoyé uniquement à la création : sert à relire le reçu sans compte.",
-          },
           client: { type: "string" },
           phone: { type: "string" },
           email: { type: "string" },
@@ -830,8 +835,9 @@ export const openApiDocument = {
         type: "object",
         required: ["file"],
         properties: {
-          file: { type: "string", description: "Image encodée en data URI base64." },
+          file: { type: "string", description: "Image ou vidéo encodée en data URI base64." },
           folder: { type: "string", enum: ["produits", "categories", "bannieres", "temoignages"] },
+          label: { type: "string" },
         },
       },
       Media: {

@@ -13,8 +13,8 @@ import { logger } from "../config/logger.js";
  *
  * Deux destinataires, deux rôles :
  *  - la boutique reçoit le signal d'action (« un colis à préparer ») ;
- *  - la cliente reçoit la preuve de sa commande, avec le lien de suivi et la
- *    facture - c'est ce lien qui rend la commande SANS COMPTE utilisable.
+ *  - la cliente reçoit la preuve de sa commande, avec le lien vers son reçu et
+ *    sa facture dans son espace client.
  */
 
 const ADMIN_EMAIL = process.env.SHOP_ADMIN_EMAIL ?? "";
@@ -24,7 +24,6 @@ const fcfa = (amount: number) => `${amount.toLocaleString("fr-FR")} FCFA`;
 
 export type OrderMailPayload = {
   id: string;
-  publicToken: string;
   client: string;
   phone: string;
   email?: string | null;
@@ -40,7 +39,6 @@ export type OrderMailPayload = {
   total: number;
   promoCode?: string | null;
   note?: string | null;
-  guest?: boolean;
 };
 
 const layout = (shopName: string, title: string, body: string) => `
@@ -77,9 +75,9 @@ const deliveryBlock = (order: OrderMailPayload) => `
   ${order.city}, ${order.country} - ${order.deliveryMode}
 </p>`;
 
-/** Lien de suivi. Le jeton y est indispensable pour une commande sans compte. */
+/** Lien vers le reçu, dans l'espace client (accès réservé au compte). */
 const receiptUrl = (order: OrderMailPayload) =>
-  SITE_URL ? `${SITE_URL}/commande/${order.id}?token=${order.publicToken}` : null;
+  SITE_URL ? `${SITE_URL}/commande/${order.id}` : null;
 
 async function send(to: string, subject: string, html: string) {
   const mailer = await getMailer();
@@ -109,7 +107,7 @@ export const mailService = {
           order.note
             ? `<p style="font-size:13px;margin-top:16px"><strong>Note de la cliente :</strong> ${order.note}</p>`
             : ""
-        }${order.guest ? `<p style="font-size:13px;color:#8c857a">Commande passée sans compte.</p>` : ""}${link}`,
+        }${link}`,
       ),
     );
   },
@@ -120,16 +118,10 @@ export const mailService = {
     const shop = await settingService.get();
     const url = receiptUrl(order);
 
-    // Sans compte, ce lien est le SEUL moyen de retrouver la commande : il porte
-    // le jeton de lecture. On le presente donc explicitement comme a conserver.
     const follow = url
       ? `<p style="font-size:14px;line-height:1.6;margin-top:20px">
            <a href="${url}" style="color:#b8935a">Suivre ma commande et télécharger ma facture</a><br>
-           <span style="font-size:12px;color:#8c857a">${
-             order.guest
-               ? "Conservez ce lien : il vous permet de retrouver votre commande sans avoir de compte."
-               : "Vous retrouverez aussi cette commande dans votre espace client."
-           }</span>
+           <span style="font-size:12px;color:#8c857a">Connectez-vous pour retrouver cette commande dans votre espace client.</span>
          </p>`
       : "";
 

@@ -31,9 +31,18 @@ maybe("commande de bout en bout (base réelle)", async () => {
     product: `itest-prod-${Date.now()}`,
     zone: "",
     variant: "",
+    user: "",
   };
 
   before(async () => {
+    const user = await prisma.user.create({
+      data: {
+        name: "Awa Test",
+        phone: `77${Date.now().toString().slice(-7)}`,
+        passwordHash: "x",
+      },
+    });
+    ids.user = user.id;
     const category = await prisma.category.create({
       data: { id: ids.category, name: ids.category, slug: ids.category, image: "x", position: 99 },
     });
@@ -72,6 +81,7 @@ maybe("commande de bout en bout (base réelle)", async () => {
     await prisma.product.deleteMany({ where: { id: ids.product } });
     await prisma.category.deleteMany({ where: { id: ids.category } });
     await prisma.deliveryZone.deleteMany({ where: { id: ids.zone } });
+    await prisma.user.deleteMany({ where: { id: ids.user } });
     await prisma.$disconnect();
   });
 
@@ -101,7 +111,7 @@ maybe("commande de bout en bout (base réelle)", async () => {
         method: "Paiement à la livraison",
         items: [{ variantId: ids.variant, qty: 3 }],
       },
-      null,
+      ids.user,
     );
 
     const after = await prisma.stock.findUniqueOrThrow({ where: { variantId: ids.variant } });
@@ -125,7 +135,7 @@ maybe("commande de bout en bout (base réelle)", async () => {
           method: "Paiement à la livraison",
           items: [{ variantId: ids.variant, qty: 999 }],
         },
-        null,
+        ids.user,
       ),
     );
     const after = await prisma.stock.findUniqueOrThrow({ where: { variantId: ids.variant } });

@@ -66,6 +66,9 @@ export function createApp() {
   app.use(cookieParser());
   // Limite de taille : les photos produit arrivent encodées en base64 depuis le
   // back-office. Au-delà, la requête est refusée avant d'occuper la mémoire.
+  // Le téléversement de média accepte aussi une vidéo produit : sa limite plus
+  // haute est cantonnée à cette seule route (admin, débit limité).
+  app.use(`${API_PREFIX}/media`, express.json({ limit: "56mb" }));
   app.use(express.json({ limit: "12mb" }));
 
   // Compression Brotli/gzip des réponses (rules/performance.md).

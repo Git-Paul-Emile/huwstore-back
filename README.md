@@ -349,7 +349,7 @@ tomber en 404.
 ### Tests
 
 ```bash
-npm test              # 79 tests unitaires + intégration HTTP, sans dépendance
+npm test              # 80 tests unitaires + intégration HTTP, sans dépendance
 npm run test:integration   # base réelle, seulement si TEST_DATABASE_URL est défini
 ```
 
@@ -363,3 +363,64 @@ décrémente le stock dans la même transaction.
 `bcrypt` passe en **6.x** (retire `node-pre-gyp`/`tar` vulnérables) ; un
 `overrides` force `deepmerge-ts@8` (faille via la CLI Prisma). `npm run audit` :
 0 vulnérabilité. Script `audit` ajouté (`npm audit --audit-level=high`).
+
+---
+
+## Mise à jour du 29 août 2026 — compte obligatoire, coloris éditables, stats agrégées
+
+Décisions produit de la cliente + correctifs relevés en revue de conformité.
+
+### Ce qui change en base
+
+```bash
+npm install
+npx prisma generate
+npx prisma migrate deploy     # applique 20260829120000_commande_compte_obligatoire
+```
+
+La migration : supprime `Order.publicToken` et rend `Order.userId` **obligatoire**.
+En prod, si des commandes en invité (`userId` NULL) existent encore, l'`ALTER`
+échoue volontairement — les rattacher d'abord à un compte, puis rejouer.
+
+### Commande réservée au compte
+
+La commande en invité n'est plus ouverte (écart assumé vs recueil de besoins,
+choix de la cliente pour un fichier clients complet).
+
+| Route                 | Avant              | Après        |
+| --------------------- | ------------------ | ------------ |
+| `POST /orders`        | public             | `requireAuth` |
+| `GET /orders/:id`     | public + `?token=` | `requireAuth`, propriétaire uniquement |
+| `GET /orders/:id/invoice` | idem           | idem         |
+
+`optionalAuth` et le jeton de lecture anonyme (`publicToken`) sont retirés.
+
+### Nouvelle route
+
+| Méthode | Route              | Rôle                                                                    |
+| ------- | ------------------ | ---------------------------------------------------------------------- |
+| `GET`   | `/stats/overview`  | Admin — nombre de commandes, CA encaissé, panier moyen, articles vendus sur `?days=` (défaut 30, max 365). Agrégé en base : juste quel que soit le volume (le back-office ne recalcule plus à partir d'une page de 25 commandes). |
+
+### Fiche produit
+
+`PATCH /products/:id` accepte désormais un tableau `variants` optionnel décrivant
+l'**état complet** voulu des coloris : un `id` présent met à jour un coloris
+existant (libellés, teintes, galerie), un `id` absent en crée un, un coloris
+existant absent de la liste est **archivé** (jamais supprimé — `OrderItem` et
+`StockMovement` y renvoient). Le stock reste piloté par `/stock`.
+
+### Média : vidéo produit
+
+`POST /media` accepte maintenant une **vidéo** (`data:video/mp4|webm`, 40 Mo max)
+en plus des images (8 Mo). Le type est déduit du data URI ; Cloudinary reçoit
+`resource_type: "video"`. La vidéo produit se **téléverse** depuis le
+back-office comme une photo — plus d'URL saisie à la main (le front rend
+`<video src>`, une URL YouTube ne fonctionnait pas). Limite de corps de requête
+portée à 56 Mo **pour la seule route `/media`**.
+
+### Transactions
+
+`config/database.ts` expose `TX_OPTIONS` (`timeout: 20 s`) appliqué aux
+transactions interactives (commande + édition produit) : la valeur Prisma par
+défaut de 5 s est trop courte quand la base (Neon) et l'app sont dans des
+régions différentes.
