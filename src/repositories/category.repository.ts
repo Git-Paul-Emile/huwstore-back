@@ -8,6 +8,7 @@ export const categoryRepository = {
       orderBy: [{ position: "asc" }, { createdAt: "asc" }],
     }),
   findById: (id: string) => prisma.category.findUnique({ where: { id } }),
+  existsById: async (id: string) => (await prisma.category.count({ where: { id } })) > 0,
   findByName: (name: string) => prisma.category.findUnique({ where: { name } }),
   findBySlug: (slug: string) => prisma.category.findUnique({ where: { slug } }),
   countProducts: (id: string) => prisma.product.count({ where: { categoryId: id } }),

@@ -1,4 +1,55 @@
 {
+  "cabas-bi-matiere-similicuir": {
+    "images": {
+      "beige": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272505/huwstore/products/cabas-bi-matiere-similicuir/beige-1.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272506/huwstore/products/cabas-bi-matiere-similicuir/generic-1.jpg"
+      ],
+      "gris": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272507/huwstore/products/cabas-bi-matiere-similicuir/gris-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272509/huwstore/products/cabas-bi-matiere-similicuir/gris-2.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272511/huwstore/products/cabas-bi-matiere-similicuir/marron-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "cabas-cuir-pu": {
+    "images": {
+      "cognac": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272512/huwstore/products/cabas-cuir-pu/cognac-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272513/huwstore/products/cabas-cuir-pu/cognac-2.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272515/huwstore/products/cabas-cuir-pu/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272516/huwstore/products/cabas-cuir-pu/generic-2.jpg"
+      ],
+      "marron-cafe": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272517/huwstore/products/cabas-cuir-pu/marron-cafe-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272518/huwstore/products/cabas-cuir-pu/noir-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "cabas-multi-compartiments": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272519/huwstore/products/cabas-multi-compartiments/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272521/huwstore/products/cabas-multi-compartiments/generic-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272522/huwstore/products/cabas-multi-compartiments/generic-3.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272523/huwstore/products/cabas-multi-compartiments/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272524/huwstore/products/cabas-multi-compartiments/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
   "fourre-tout-oxford": {
     "images": {
       "beige": [
@@ -40,6 +91,23 @@
     },
     "video": "https://res.cloudinary.com/sbyx9l2f/video/upload/v1787839515/huwstore/products/fourre-tout-toile-epaisse/video.mp4"
   },
+  "sac-a-dos-cuir-pu": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272550/huwstore/products/sac-a-dos-cuir-pu/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272551/huwstore/products/sac-a-dos-cuir-pu/generic-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272552/huwstore/products/sac-a-dos-cuir-pu/generic-3.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272553/huwstore/products/sac-a-dos-cuir-pu/marron-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272555/huwstore/products/sac-a-dos-cuir-pu/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272556/huwstore/products/sac-a-dos-cuir-pu/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
   "sac-main-patchwork-pu": {
     "images": {
       "bleu": [
@@ -54,7 +122,29 @@
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839521/huwstore/products/sac-main-patchwork-pu/jaune-1.jpg"
       ],
       "rose": [
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839522/huwstore/products/sac-main-patchwork-pu/rose-1.jpg"
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272567/huwstore/products/sac-main-patchwork-pu/rose-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "sac-voyage-sport-maternite": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301493/huwstore/products/sac-voyage-sport-maternite/generic-1.jpg"
+      ],
+      "gris": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301494/huwstore/products/sac-voyage-sport-maternite/gris-1.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301496/huwstore/products/sac-voyage-sport-maternite/marron-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301497/huwstore/products/sac-voyage-sport-maternite/noir-1.jpg"
+      ],
+      "rose": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301498/huwstore/products/sac-voyage-sport-maternite/rose-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301500/huwstore/products/sac-voyage-sport-maternite/rose-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788301501/huwstore/products/sac-voyage-sport-maternite/rose-3.jpg"
       ]
     },
     "video": null
@@ -62,17 +152,17 @@
   "tote-bag-coton-durable": {
     "images": {
       "beige": [
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839523/huwstore/products/tote-bag-coton-durable/beige-1.jpg",
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839524/huwstore/products/tote-bag-coton-durable/beige-2.jpg"
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272569/huwstore/products/tote-bag-coton-durable/beige-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272570/huwstore/products/tote-bag-coton-durable/beige-2.jpg"
       ],
       "generic": [
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839525/huwstore/products/tote-bag-coton-durable/generic-1.jpg"
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272572/huwstore/products/tote-bag-coton-durable/generic-1.jpg"
       ],
       "marron": [
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839526/huwstore/products/tote-bag-coton-durable/marron-1.jpg"
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272574/huwstore/products/tote-bag-coton-durable/marron-1.jpg"
       ],
       "noir": [
-        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839527/huwstore/products/tote-bag-coton-durable/noir-1.jpg"
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272575/huwstore/products/tote-bag-coton-durable/noir-1.jpg"
       ]
     },
     "video": "https://res.cloudinary.com/sbyx9l2f/video/upload/v1787839531/huwstore/products/tote-bag-coton-durable/video.mp4"
@@ -89,6 +179,24 @@
       "noir": [
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839536/huwstore/products/tote-bag-freedom/noir-1.jpg",
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839537/huwstore/products/tote-bag-freedom/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-toile-bandouliere": {
+    "images": {
+      "beige": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272594/huwstore/products/tote-bag-toile-bandouliere/beige-1.jpg"
+      ],
+      "blanc-casse": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272596/huwstore/products/tote-bag-toile-bandouliere/blanc-casse-1.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272597/huwstore/products/tote-bag-toile-bandouliere/generic-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272599/huwstore/products/tote-bag-toile-bandouliere/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272600/huwstore/products/tote-bag-toile-bandouliere/noir-2.jpg"
       ]
     },
     "video": null

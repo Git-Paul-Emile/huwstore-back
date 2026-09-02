@@ -46,6 +46,9 @@ export const orderStatusMap = createEnumMap([
 ] as const);
 
 export const bannerSlotMap = createEnumMap([
+  // Conserves pour les bannieres creees avant : ni le hero ni la pop-up ne
+  // s'affichent, et les validateurs refusent ces slots, mais une ligne restee
+  // en base doit encore pouvoir etre lue et supprimee depuis le back-office.
   ["HERO", "Hero"],
   ["BANDEAU_PROMO", "Bandeau promo"],
   ["POPUP", "Pop-up"],
@@ -55,6 +58,12 @@ export const bannerTargetMap = createEnumMap([
   ["TOUTES", "Toutes"],
   ["MOBILE", "Mobile"],
   ["DESKTOP", "Desktop"],
+] as const);
+
+export const bannerLinkTypeMap = createEnumMap([
+  ["PATH", "Page libre"],
+  ["CATEGORY", "Catégorie"],
+  ["PRODUCT", "Produit"],
 ] as const);
 
 export const promoTypeMap = createEnumMap([

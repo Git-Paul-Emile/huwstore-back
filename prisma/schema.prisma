@@ -43,8 +43,13 @@ enum DeliveryMode {
 }
 
 enum BannerSlot {
+  /// Obsoletes : le hero n'affiche plus de banniere depuis la refonte du bloc
+  /// d'accueil, et la pop-up n'a jamais ete affichee. Valeurs conservees pour
+  /// les lignes existantes (retirer une valeur d'enum PostgreSQL impose de
+  /// recreer le type) ; l'API n'en accepte plus aucune des deux.
   HERO
   BANDEAU_PROMO
+  /// Obsolete, voir HERO.
   POPUP
 }
 
@@ -52,6 +57,15 @@ enum BannerTarget {
   TOUTES
   MOBILE
   DESKTOP
+}
+
+/// Nature de la destination du bouton d'une campagne. PATH : un chemin libre
+/// saisi a la main (ctaHref). CATEGORY / PRODUCT : une cible choisie dans le
+/// catalogue, dont le serveur deduit l'URL.
+enum BannerLinkType {
+  PATH
+  CATEGORY
+  PRODUCT
 }
 
 enum PromoType {
@@ -77,6 +91,7 @@ model Category {
   description String?
   position  Int       @default(0)
   products  Product[]
+  banners   Banner[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
@@ -123,6 +138,7 @@ model Product {
   images     ProductImage[]
   orderItems OrderItem[]
   wishlisted WishlistItem[]
+  banners    Banner[]
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -341,12 +357,20 @@ model Banner {
   subtitle String?
   text     String?
   ctaLabel String?
-  /// Destination du bouton, ex. /boutique ou /boutique/mini-sacs-a-main.
+  /// Nature de la destination du bouton. Le serveur en deduit ctaHref renvoye
+  /// a la vitrine : chemin libre, page d'une categorie, ou fiche produit.
+  linkType BannerLinkType @default(PATH)
+  /// Chemin interne quand linkType vaut PATH, ex. /boutique. Ignore sinon.
   ctaHref  String?
+  /// Cible quand linkType vaut CATEGORY. onDelete: SetNull - supprimer la
+  /// categorie ne bloque pas, la campagne retombe alors sur /boutique.
+  linkCategoryId String?
+  linkCategory   Category? @relation(fields: [linkCategoryId], references: [id], onDelete: SetNull)
+  /// Cible quand linkType vaut PRODUCT. Meme repli que la categorie.
+  linkProductId String?
+  linkProduct   Product? @relation(fields: [linkProductId], references: [id], onDelete: SetNull)
   slot     BannerSlot
   target   BannerTarget @default(TOUTES)
-  /// Cadrage de la photo quand elle est rognee : "center", "top" ou "bottom".
-  focus    String       @default("center")
   position Int          @default(0)
   start    DateTime
   end      DateTime
@@ -354,6 +378,8 @@ model Banner {
   image    String
 
   @@index([slot, active, position])
+  @@index([linkCategoryId])
+  @@index([linkProductId])
 }
 
 /// Parametres de la boutique, edites depuis le back-office et lus par la

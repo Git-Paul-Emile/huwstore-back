@@ -29,8 +29,9 @@ const prisma = new PrismaClient();
 
 /**
  * Zones de livraison. Le recueil de besoins est explicite : la boutique livre
- * « tout le Sénégal », en 24 h sur Dakar et 72 h en région (Q24, Q36).
- * Les frais et le seuil de gratuité se règlent ensuite depuis le back-office.
+ * « tout le Sénégal » (Q24, Q36). Dakar est livré en 24 h, hors dimanche ; les
+ * délais des autres zones sont ceux annoncés au panier. Délais, frais et seuil
+ * de gratuité se règlent ensuite depuis le back-office.
  */
 const deliveryZones = [
   { city: "Dakar", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: true, active: true },
@@ -287,14 +288,14 @@ async function seedBackOffice() {
       email: process.env.SHOP_ADMIN_EMAIL ?? null,
       city: "Dakar",
       country: "Sénégal",
-      announcement: "Livraison 24 h sur Dakar · 72 h en région · Paiement à la livraison",
+      announcement: "Livraison 24 h sur Dakar sauf le dimanche · Paiement à la livraison",
     },
   });
 
-  // Aucune bannière Hero par défaut : le premier slide du carrousel est fixe,
-  // codé dans `HeroSlider.tsx` (front). Les bannières Hero ne servent plus
-  // qu'aux campagnes ponctuelles que la boutique ajoute elle-même - en semer
-  // ici créerait de fausses "promotions" à côté du slide statique.
+  // Aucune bannière d'accueil semée ici : le haut de la page d'accueil est un
+  // bloc fixe sans image de fond, écrit dans `Hero.tsx` (front). Les bannières
+  // ne servent plus qu'aux campagnes ponctuelles que la boutique ajoute
+  // elle-même - en semer ici créerait de fausses "promotions".
 
   // Avis mis en avant sur la page d'accueil ("Les retours de nos clientes").
   // Contenu de démarrage, à remplacer par de vrais retours dès qu'ils arrivent.
@@ -341,7 +342,6 @@ async function seedBackOffice() {
         ctaHref: "/boutique",
         slot: "BANDEAU_PROMO",
         target: "TOUTES",
-        focus: "center",
         position: 0,
         start: new Date(),
         end: new Date("2026-12-31"),

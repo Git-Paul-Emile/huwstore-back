@@ -5,10 +5,19 @@
       "folder": "Nouveau dossier",
       "video": "WhatsApp Video 2026-08-24 at 22.57.33.mp4",
       "images": {
-        "noir": ["WhatsApp Image 2026-08-24 at 22.57.24.jpeg"],
-        "marron": ["WhatsApp Image 2026-08-244 at 422.57.24.jpeg"],
-        "beige": ["WhatsApp Image 2026-08-24 at 22.57.26.jpeg", "WhatsApp Image 20l26-08-24 at 22.57.24.jpeg"],
-        "_generic": ["WhatsApp Image 2026-08-244 at 22.57.24.jpeg"]
+        "noir": [
+          "WhatsApp Image 2026-08-24 at 22.57.24.jpeg"
+        ],
+        "marron": [
+          "WhatsApp Image 2026-08-244 at 422.57.24.jpeg"
+        ],
+        "beige": [
+          "WhatsApp Image 2026-08-24 at 22.57.26.jpeg",
+          "WhatsApp Image 20l26-08-24 at 22.57.24.jpeg"
+        ],
+        "_generic": [
+          "WhatsApp Image 2026-08-244 at 22.57.24.jpeg"
+        ]
       }
     },
     {
@@ -16,10 +25,20 @@
       "folder": "Nouveau dossier (2)",
       "video": null,
       "images": {
-        "bleu": ["WhatsApp Image 2026-08-25 at 10.12.07.jpeg", "lWhatsApp Image 2026-08-25 at 10.12.09.jpeg"],
-        "jaune": ["WhatsApp Image 2026-08-25 at 10.12.08.jpeg"],
-        "rose": ["WhatsApp Image 2026-0l8-25 at 10.12.08.jpeg"],
-        "_generic": ["^pWhatsApp Image 2026-08-25 at 10.12.08.jpeg", "WhatsApp Image 2026-08-25 at 10.12.09.jpeg"]
+        "bleu": [
+          "WhatsApp Image 2026-08-25 at 10.12.07.jpeg",
+          "lWhatsApp Image 2026-08-25 at 10.12.09.jpeg"
+        ],
+        "jaune": [
+          "WhatsApp Image 2026-08-25 at 10.12.08.jpeg"
+        ],
+        "rose": [
+          "WhatsApp Image 2026-0l8-25 at 10.12.08.jpeg"
+        ],
+        "_generic": [
+          "^pWhatsApp Image 2026-08-25 at 10.12.08.jpeg",
+          "WhatsApp Image 2026-08-25 at 10.12.09.jpeg"
+        ]
       }
     },
     {
@@ -27,11 +46,23 @@
       "folder": "Nouveau dossier (3)",
       "video": null,
       "images": {
-        "noir": ["WhatsApp Image 2026-08-25 at 11.50.03.jpeg", "dWhatsApp Image 2026-08-25 at 11.50.05.jpeg"],
-        "vert": ["WhatsApp Image 2026-08-25 at 11.50.05.jpeg", "pWhatsApp Image 2026-08-25 at 11.50.03.jpeg"],
-        "beige": ["eWhatsApp Image 2026-08-25 at 11.50.03.jpeg"],
-        "violet": ["eWhatsApp Image 2026-08-25 at 11.50.04.jpeg"],
-        "_generic": ["WhatsApp Image 2026-08-25 at 11.50.06.jpeg"]
+        "noir": [
+          "WhatsApp Image 2026-08-25 at 11.50.03.jpeg",
+          "dWhatsApp Image 2026-08-25 at 11.50.05.jpeg"
+        ],
+        "vert": [
+          "WhatsApp Image 2026-08-25 at 11.50.05.jpeg",
+          "pWhatsApp Image 2026-08-25 at 11.50.03.jpeg"
+        ],
+        "beige": [
+          "eWhatsApp Image 2026-08-25 at 11.50.03.jpeg"
+        ],
+        "violet": [
+          "eWhatsApp Image 2026-08-25 at 11.50.04.jpeg"
+        ],
+        "_generic": [
+          "WhatsApp Image 2026-08-25 at 11.50.06.jpeg"
+        ]
       }
     },
     {
@@ -39,9 +70,17 @@
       "folder": "Nouveau dossier (4)",
       "video": null,
       "images": {
-        "noir": ["WhatsApp Image 2026-08-25 at 13.10.13.jpeg", "vWhatsApp Image 2026-08-25 at 13.10.14.jpeg"],
-        "beige": ["eWhatsApp Image 2026-08-25 at 13.10.13.jpeg", "xWhatsApp Image 2026-08-25 at 13.10.14.jpeg"],
-        "_generic": ["dWhatsApp Image 2026-08-25 at 13.10.13.jpeg"]
+        "noir": [
+          "WhatsApp Image 2026-08-25 at 13.10.13.jpeg",
+          "vWhatsApp Image 2026-08-25 at 13.10.14.jpeg"
+        ],
+        "beige": [
+          "eWhatsApp Image 2026-08-25 at 13.10.13.jpeg",
+          "xWhatsApp Image 2026-08-25 at 13.10.14.jpeg"
+        ],
+        "_generic": [
+          "dWhatsApp Image 2026-08-25 at 13.10.13.jpeg"
+        ]
       }
     },
     {
@@ -49,10 +88,20 @@
       "folder": "Nouveau dossier (5)",
       "video": "WhatsApp Video 2026-08-25 at 13.51.57.mp4",
       "images": {
-        "noir": ["jWhatsApp Image 2026-08-25 at 13.51.48.jpeg"],
-        "gris": ["WhatsApp Image 2026-08-25 at 13.51.48.jpeg", "jjWhatsApp Image 2026-08-25 at 13.51.48.jpeg"],
-        "kaki": ["tWhatsApp Image 2026-08-25 at 13.51.49.jpeg", "hWhatsApp Image 2026-08-25 at 13.51.49.jpeg"],
-        "_generic": ["kWhatsApp Image 2026-08-25 at 13.51.49.jpeg"]
+        "noir": [
+          "jWhatsApp Image 2026-08-25 at 13.51.48.jpeg"
+        ],
+        "gris": [
+          "WhatsApp Image 2026-08-25 at 13.51.48.jpeg",
+          "jjWhatsApp Image 2026-08-25 at 13.51.48.jpeg"
+        ],
+        "kaki": [
+          "tWhatsApp Image 2026-08-25 at 13.51.49.jpeg",
+          "hWhatsApp Image 2026-08-25 at 13.51.49.jpeg"
+        ],
+        "_generic": [
+          "kWhatsApp Image 2026-08-25 at 13.51.49.jpeg"
+        ]
       }
     },
     {
@@ -60,13 +109,140 @@
       "folder": "Nouveau dossier (6)",
       "video": null,
       "images": {
-        "noir-marron": ["WhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
+        "noir-marron": [
+          "WhatsApp Image 2026-08-25 at 15.42.47.jpeg"
+        ],
         "noir-blanc-casse": [
           "lWhatsApp Image 2026-08-25 at 15.42.47.jpeg",
           "oWhatsApp Image 2026-08-25 at 15.42.48.jpeg"
         ],
-        "blanc-casse-marron": ["llWhatsApp Image 2026-08-25 at 15.42.47.jpeg"],
-        "_generic": ["pWhatsApp Image 2026-08-25 at 15.42.48.jpeg", "WhatsApp Image 2026-08-25 at 15.42.49.jpeg"]
+        "blanc-casse-marron": [
+          "llWhatsApp Image 2026-08-25 at 15.42.47.jpeg"
+        ],
+        "_generic": [
+          "pWhatsApp Image 2026-08-25 at 15.42.48.jpeg",
+          "WhatsApp Image 2026-08-25 at 15.42.49.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "tote-bag-toile-bandouliere",
+      "folder": "Nouveau dossier (7)",
+      "video": null,
+      "images": {
+        "noir": [
+          "WhatsApp Image 2026-08-31 at 12.26.05.jpeg",
+          "WhatsApp Image 2026-08-31 at 12.26.06.jpeg"
+        ],
+        "blanc-casse": [
+          "WhatsApp Image 202g6-08-31 at 12.26.05.jpeg"
+        ],
+        "beige": [
+          "vWhatsApp Image 2026-08-31 at 12.26.07.jpeg"
+        ],
+        "_generic": [
+          "lWhatsApp Image 2026-08-31 at 12.26.06.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "cabas-bi-matiere-similicuir",
+      "folder": "Nouveau dossier (8)",
+      "video": null,
+      "images": {
+        "gris": [
+          "WhatsApp Image 2026-08-31 at 12.49.00.jpeg",
+          "oWhatsApp Image 2026-08-31 at 12.49.01.jpeg"
+        ],
+        "beige": [
+          "WhatsApp Image 2026-08-31 at 12.49.01.jpeg"
+        ],
+        "marron": [
+          "pWhatsApp Image 2026-08-31 at 12.49.01.jpeg"
+        ],
+        "_generic": [
+          "opWhatsApp Image 2026-08-31 at 12.49.02.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "cabas-cuir-pu",
+      "folder": "Nouveau dossier (9)",
+      "video": null,
+      "images": {
+        "marron-cafe": [
+          "WhatsApp Image 2026-08-31 at 12.55.41.jpeg"
+        ],
+        "cognac": [
+          "WhatpsApp Image 2026-08-31 at 12.55.41.jpeg",
+          "iWhatsApp Image 2026-08-31 at 12.55.43.jpeg"
+        ],
+        "noir": [
+          "pWhatsApp Image 2026-08-31 at 12.55.42.jpeg"
+        ],
+        "_generic": [
+          "sWhatsApp Image 2026-08-31 at 12.55.43.jpeg",
+          "yWhatsApp Image 2026-08-31 at 12.55.44.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "cabas-multi-compartiments",
+      "folder": "Nouveau dossier (10)",
+      "video": null,
+      "images": {
+        "noir": [
+          "WhatsApp Image 2026-08-31 at 13.07.09.jpeg",
+          "pWhatsApp Image 2026-08-31 at 13.07.09.jpeg"
+        ],
+        "_generic": [
+          "ooWhatsApp Image 2026-08-31 at 13.07.09.jpeg",
+          "oopWhatsApp Image 2026-08-31 at 13.07.10.jpeg",
+          "erWhatsApp Image 2026-08-31 at 13.07.10.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "sac-a-dos-cuir-pu",
+      "folder": "Nouveau dossier (11)",
+      "video": null,
+      "images": {
+        "noir": [
+          "WhatsApp Image 2026-08-31 at 13.26.02.jpeg",
+          "pWhatsApp Image 2026-08-31 at 13.26.02.jpeg"
+        ],
+        "marron": [
+          "oWhatsApp Image 2026-08-31 at 13.26.02.jpeg"
+        ],
+        "_generic": [
+          "bWhatsApp Image 2026-08-31 at 13.26.04.jpeg",
+          "lWhatsApp Image 2026-08-31 at 13.26.03.jpeg",
+          "vWhatsApp Image 2026-08-31 at 13.26.03.jpeg"
+        ]
+      }
+    },
+    {
+      "slug": "sac-voyage-sport-maternite",
+      "folder": "Nouveau dossier (12)",
+      "video": null,
+      "images": {
+        "noir": [
+          "WhatsApp Image 2026-09-01 at 21.36.47.jpeg"
+        ],
+        "rose": [
+          "WhatsApp Image 2026-09-01 at 21.36.43.jpeg",
+          "WhatsApp Image 2026-09-01 at 21.36.50.jpeg",
+          "lWhatsApp Image 2026-09-01 at 21.36.50.jpeg"
+        ],
+        "gris": [
+          "WhatsApp Image 2026-09-01 at 21.36.49.jpeg"
+        ],
+        "marron": [
+          "WhatsApp Image 2026-09-01 at 21.36.48.jpeg"
+        ],
+        "_generic": [
+          "WhatsApp Image 2026-09-01 at 21.36.46.jpeg"
+        ]
       }
     }
   ]

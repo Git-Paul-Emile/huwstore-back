@@ -41,6 +41,8 @@ export const productRepository = {
 
   findById: (id: string) => prisma.product.findUnique({ where: { id }, include }),
 
+  existsById: async (id: string) => (await prisma.product.count({ where: { id } })) > 0,
+
   findBySlug: (slug: string) => prisma.product.findUnique({ where: { slug }, include }),
 
   create: (data: Prisma.ProductCreateInput) => prisma.product.create({ data, include }),
