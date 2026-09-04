@@ -9,6 +9,7 @@ import { CircuitBreaker, resilient } from "../../lib/resilience.js";
 import { AppError } from "../../utils/AppError.js";
 import { logger } from "../../config/logger.js";
 import { slugify } from "../../utils/slugify.js";
+import { env } from "../../config/env.js";
 
 export type ImageUploadInput = {
   /** Fichier encodé (data URI ou URL distante), tel que reçu du back-office. */
@@ -53,7 +54,7 @@ export class CloudinaryImageStore implements ImageStore {
   constructor(private readonly uploader: CloudinaryUploader) {}
 
   isConfigured(): boolean {
-    return Boolean(process.env.CLOUDINARY_URL);
+    return Boolean(env.CLOUDINARY_URL);
   }
 
   async upload(input: ImageUploadInput): Promise<StoredImage> {

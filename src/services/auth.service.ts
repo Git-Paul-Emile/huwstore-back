@@ -1,7 +1,9 @@
+import { createHash, randomUUID } from "node:crypto";
 import bcrypt from "bcrypt";
 import { userRepository } from "../repositories/user.repository.js";
+import { refreshTokenRepository } from "../repositories/refreshToken.repository.js";
 import { AppError } from "../utils/AppError.js";
-import { signAccessToken, signRefreshToken } from "../config/jwt.js";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../config/jwt.js";
 import type { loginSchema, profileUpdateSchema, registerSchema } from "../validators/auth.validator.js";
 import type { z } from "zod";
 
@@ -14,6 +16,12 @@ import type { z } from "zod";
  */
 const BCRYPT_ROUNDS = 12;
 
+/** Durée de vie du jeton de rafraîchissement, alignée sur `signRefreshToken` (30 jours). */
+const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+/** SHA-256 : la table ne stocke jamais le jeton en clair, seulement son empreinte. */
+const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+
 const toDto = (user: { id: string; name: string; phone: string; email: string | null; role: "CLIENT" | "ADMIN" }) => ({
   id: user.id,
   name: user.name,
@@ -22,14 +30,28 @@ const toDto = (user: { id: string; name: string; phone: string; email: string | 
   role: user.role,
 });
 
-async function issueSession(user: Awaited<ReturnType<typeof userRepository.findByPhone>>) {
+type SessionUser = { id: string; name: string; phone: string; email: string | null; role: "CLIENT" | "ADMIN" };
+
+/**
+ * Émet une session : jeton d'accès court + jeton de rafraîchissement long,
+ * ce dernier enregistré (haché) et rattaché à une `family`. À la connexion,
+ * une nouvelle famille naît ; à un refresh, on reste dans la même famille pour
+ * pouvoir tout révoquer si un vol est détecté.
+ */
+async function issueSession(user: SessionUser | null, family?: string) {
   if (!user) throw AppError.unauthorized();
+
   const payload = { userId: user.id, role: user.role };
-  return {
-    user: toDto(user),
-    accessToken: signAccessToken(payload),
-    refreshToken: signRefreshToken(payload),
-  };
+  const refreshToken = signRefreshToken(payload);
+
+  await refreshTokenRepository.create({
+    userId: user.id,
+    tokenHash: hashToken(refreshToken),
+    family: family ?? randomUUID(),
+    expiresAt: new Date(Date.now() + REFRESH_TTL_MS),
+  });
+
+  return { user: toDto(user), accessToken: signAccessToken(payload), refreshToken };
 }
 
 export const authService = {
@@ -58,15 +80,50 @@ export const authService = {
   },
 
   /**
-   * Renouvelle la session a partir du seul identifiant porte par le jeton de
-   * rafraichissement. On RELIT l'utilisateur en base a chaque fois : un compte
-   * supprime, ou dont le role a change, ne doit pas continuer a vivre pendant
-   * trente jours sur la foi d'un jeton emis autrefois.
+   * Rotation du jeton de rafraîchissement (rules/security.md).
+   *
+   * Le jeton présenté doit être valide (signature), connu en base, non révoqué
+   * et non expiré. On le révoque alors et on en émet un nouveau dans la même
+   * famille. Si le jeton est valide mais DÉJÀ révoqué, c'est qu'il a été rejoué
+   * après rotation : signe d'un vol, on révoque toute la famille et on refuse.
    */
-  async refresh(userId: string) {
-    const user = await userRepository.findById(userId);
+  async refresh(rawToken: string) {
+    let payload: { userId: string };
+    try {
+      payload = verifyRefreshToken(rawToken);
+    } catch {
+      throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+    }
+
+    const stored = await refreshTokenRepository.findByHash(hashToken(rawToken));
+    if (!stored || stored.userId !== payload.userId) {
+      throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+    }
+
+    if (stored.revokedAt) {
+      await refreshTokenRepository.revokeFamily(stored.family);
+      throw AppError.unauthorized("Session invalidée pour raison de sécurité, veuillez vous reconnecter.");
+    }
+
+    if (stored.expiresAt.getTime() < Date.now()) {
+      throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+    }
+
+    await refreshTokenRepository.revokeById(stored.id);
+
+    // On relit l'utilisateur : un compte supprimé, ou dont le rôle a changé, ne
+    // doit pas continuer à vivre sur la foi d'un jeton émis autrefois.
+    const user = await userRepository.findById(stored.userId);
     if (!user) throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
-    return issueSession(user);
+
+    return issueSession(user, stored.family);
+  },
+
+  /** Déconnexion : révoque toute la famille du jeton présenté. Idempotent. */
+  async logout(rawToken: string | undefined) {
+    if (!rawToken) return;
+    const stored = await refreshTokenRepository.findByHash(hashToken(rawToken));
+    if (stored) await refreshTokenRepository.revokeFamily(stored.family);
   },
 
   /**

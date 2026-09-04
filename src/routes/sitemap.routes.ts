@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { productRepository } from "../repositories/product.repository.js";
 import { TtlCache } from "../lib/cache.js";
+import { env } from "../config/env.js";
 
 /**
  * Plan du site (rules/SEO.md).
@@ -17,7 +18,7 @@ import { TtlCache } from "../lib/cache.js";
  */
 export const sitemapRouter = Router();
 
-const SITE_URL = (process.env.SITE_URL ?? "https://huwstore.com").replace(/\/$/, "");
+const SITE_URL = env.SITE_URL.replace(/\/$/, "");
 
 /** Le plan change avec le catalogue : 10 min de cache suffisent largement. */
 const cache = new TtlCache(10 * 60 * 1000);
@@ -28,6 +29,7 @@ const STATIC_ENTRIES: UrlEntry[] = [
   { loc: "/", changefreq: "daily", priority: "1.0" },
   { loc: "/boutique", changefreq: "daily", priority: "0.9" },
   { loc: "/contact", changefreq: "yearly", priority: "0.3" },
+  { loc: "/cgu", changefreq: "yearly", priority: "0.2" },
   { loc: "/confidentialite", changefreq: "yearly", priority: "0.2" },
 ];
 

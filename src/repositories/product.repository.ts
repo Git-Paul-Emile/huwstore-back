@@ -39,6 +39,29 @@ export const productRepository = {
 
   count: (where: Prisma.ProductWhereInput) => prisma.product.count({ where }),
 
+  /**
+   * Fiches actives récentes réduites à ce que la vignette « Nos univers » lit :
+   * la catégorie, le nom, la première image (déclinaison active d'abord, sinon
+   * galerie de la fiche). `select` sans `take` imbriqué : Prisma résout tout en
+   * quelques requêtes `IN (...)`, pas en N+1 (rules/database.md).
+   */
+  findCategoryCoverSources: (take: number) =>
+    prisma.product.findMany({
+      where: { active: true },
+      orderBy: { createdAt: "desc" },
+      take,
+      select: {
+        categoryId: true,
+        name: true,
+        images: { orderBy: { position: "asc" }, select: { url: true, alt: true } },
+        variants: {
+          where: { active: true },
+          orderBy: { position: "asc" },
+          select: { images: { orderBy: { position: "asc" }, select: { url: true, alt: true } } },
+        },
+      },
+    }),
+
   findById: (id: string) => prisma.product.findUnique({ where: { id }, include }),
 
   existsById: async (id: string) => (await prisma.product.count({ where: { id } })) > 0,

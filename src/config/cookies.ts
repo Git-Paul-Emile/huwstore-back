@@ -1,4 +1,5 @@
 import type { CookieOptions } from "express";
+import { isProduction } from "./env.js";
 
 /**
  * Cookies de session.
@@ -13,8 +14,6 @@ import type { CookieOptions } from "express";
  * l'envoie tout simplement pas. En développement, tout est sur localhost et
  * `Lax` suffit - `None` sans HTTPS serait rejeté par le navigateur.
  */
-const isProduction = process.env.NODE_ENV === "production";
-
 export const REFRESH_COOKIE = "mw-refresh-token";
 export const CSRF_COOKIE = "mw-csrf";
 export const CSRF_HEADER = "x-csrf-token";

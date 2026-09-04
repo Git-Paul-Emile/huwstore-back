@@ -2,9 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import { addressService } from "../services/address.service.js";
 import { addressSchema, addressUpdateSchema } from "../validators/address.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
-import { jsonResponse } from "../utils/jsonResponse.js";
+import { jsonResponse, noContent } from "../utils/jsonResponse.js";
 import { AppError } from "../utils/AppError.js";
 import { getParam } from "../utils/getParam.js";
+import { validBody } from "../middlewares/validate.js";
 import type { Request } from "express";
 
 /** requireAuth garantit la presence du jeton ; ce garde-fou rassure TypeScript. */
@@ -20,14 +21,12 @@ export const addressController = {
   }),
 
   create: controllerWrapper(async (req, res) => {
-    const input = addressSchema.parse(req.body);
-    const address = await addressService.create(currentUser(req), input);
+    const address = await addressService.create(currentUser(req), validBody(req, addressSchema));
     jsonResponse(res, StatusCodes.CREATED, "success", "Adresse enregistrée.", address);
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = addressUpdateSchema.parse(req.body);
-    const address = await addressService.update(currentUser(req), getParam(req, "id"), input);
+    const address = await addressService.update(currentUser(req), getParam(req, "id"), validBody(req, addressUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Adresse mise à jour.", address);
   }),
 
@@ -38,6 +37,6 @@ export const addressController = {
 
   remove: controllerWrapper(async (req, res) => {
     await addressService.remove(currentUser(req), getParam(req, "id"));
-    jsonResponse(res, StatusCodes.OK, "success", "Adresse supprimée.");
+    noContent(res);
   }),
 };

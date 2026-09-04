@@ -29,3 +29,11 @@ export function jsonResponse<T>(
 ) {
   return res.status(httpStatus).json({ status, message, data, ...(meta ? { meta } : {}) });
 }
+
+/**
+ * Suppression réussie : 204 sans corps (rules/api.md, table des verbes).
+ * Le client sait que la ressource n'est plus là, il n'a rien à lire.
+ */
+export function noContent(res: Response) {
+  return res.status(204).end();
+}

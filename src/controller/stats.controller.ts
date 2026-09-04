@@ -1,7 +1,9 @@
 import { StatusCodes } from "http-status-codes";
 import { statsService } from "../services/stats.service.js";
+import { overviewQuerySchema, topProductsQuerySchema } from "../validators/stats.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
+import { validQuery } from "../middlewares/validate.js";
 
 export const statsController = {
   dashboard: controllerWrapper(async (_req, res) => {
@@ -10,10 +12,8 @@ export const statsController = {
   }),
 
   overview: controllerWrapper(async (req, res) => {
-    const days = Number(req.query.days ?? 30);
-    const overview = await statsService.overview(
-      Number.isFinite(days) && days > 0 ? Math.min(days, 365) : 30,
-    );
+    const { days } = validQuery(req, overviewQuerySchema);
+    const overview = await statsService.overview(days);
     jsonResponse(res, StatusCodes.OK, "success", "Chiffres clés récupérés.", overview);
   }),
 
@@ -23,12 +23,8 @@ export const statsController = {
   }),
 
   topProducts: controllerWrapper(async (req, res) => {
-    const days = Number(req.query.days ?? 90);
-    const limit = Number(req.query.limit ?? 8);
-    const products = await statsService.topProducts(
-      Number.isFinite(days) && days > 0 ? Math.min(days, 365) : 90,
-      Number.isFinite(limit) && limit > 0 ? Math.min(limit, 50) : 8,
-    );
+    const { days, limit } = validQuery(req, topProductsQuerySchema);
+    const products = await statsService.topProducts(days, limit);
     jsonResponse(res, StatusCodes.OK, "success", "Meilleures ventes récupérées.", products);
   }),
 

@@ -1,10 +1,16 @@
 import { prisma } from "../config/database.js";
 import type { Prisma } from "@prisma/client";
 
+const categoryListInclude = {
+  _count: { select: { products: true } },
+} satisfies Prisma.CategoryInclude;
+
+export type CategoryRow = Prisma.CategoryGetPayload<{ include: typeof categoryListInclude }>;
+
 export const categoryRepository = {
   findAll: () =>
     prisma.category.findMany({
-      include: { _count: { select: { products: true } } },
+      include: categoryListInclude,
       orderBy: [{ position: "asc" }, { createdAt: "asc" }],
     }),
   findById: (id: string) => prisma.category.findUnique({ where: { id } }),

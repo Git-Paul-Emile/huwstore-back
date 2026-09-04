@@ -6,15 +6,30 @@ import { logger } from "./config/logger.js";
 import { monitoring } from "./config/monitoring.js";
 import { prisma } from "./config/database.js";
 import { jobQueue } from "./queue/index.js";
+import { env } from "./config/env.js";
+import { refreshTokenRepository } from "./repositories/refreshToken.repository.js";
 
 monitoring.init();
 
-const port = Number(process.env.PORT ?? 8000);
+const port = env.PORT;
 const app = createApp();
 
 const server = app.listen(port, () => {
   logger.info({ port, base: API_PREFIX }, `API disponible sur http://localhost:${port}${API_PREFIX}`);
 });
+
+/**
+ * Purge quotidienne des jetons de rafraîchissement expirés : la table ne garde
+ * pas indéfiniment une ligne par connexion. `unref` pour que ce minuteur
+ * n'empêche jamais l'arrêt du process.
+ */
+const DAY_MS = 24 * 60 * 60 * 1000;
+setInterval(() => {
+  refreshTokenRepository
+    .deleteExpired()
+    .then((result) => result.count > 0 && logger.info({ deleted: result.count }, "Jetons expirés purgés"))
+    .catch((err) => logger.error({ err }, "Purge des jetons expirés échouée"));
+}, DAY_MS).unref();
 
 /**
  * Arrêt propre. L'hébergeur envoie SIGTERM avant de couper le conteneur : on

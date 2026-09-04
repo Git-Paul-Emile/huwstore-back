@@ -1,5 +1,6 @@
 import { Resend } from "resend";
+import { env } from "./env.js";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+export const resend = new Resend(env.RESEND_API_KEY);
 
-export const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "onboarding@resend.dev";
+export const RESEND_FROM_EMAIL = env.RESEND_FROM_EMAIL;

@@ -3,6 +3,7 @@ import { settingService } from "../services/setting.service.js";
 import { settingUpdateSchema } from "../validators/setting.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
+import { validBody } from "../middlewares/validate.js";
 
 export const settingController = {
   get: controllerWrapper(async (_req, res) => {
@@ -11,8 +12,7 @@ export const settingController = {
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = settingUpdateSchema.parse(req.body);
-    const settings = await settingService.update(input);
+    const settings = await settingService.update(validBody(req, settingUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Paramètres mis à jour.", settings);
   }),
 };

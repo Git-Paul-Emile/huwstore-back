@@ -15,6 +15,7 @@ import { jobQueue } from "../queue/index.js";
 import { getMailer } from "../services/external/mailer.js";
 import { getImageStore } from "../services/external/image-store.js";
 import { prisma } from "./database.js";
+import { env } from "./env.js";
 
 /**
  * Base de l'API, versionnée (rules/api.md).
@@ -30,7 +31,7 @@ export const API_PREFIX = "/api/v1";
  * Origines autorisées par le CORS. Plusieurs valeurs séparées par des virgules
  * (préproduction + production), pour ne jamais avoir à ouvrir l'API à « * ».
  */
-const allowedOrigins = (process.env.CLIENT_URL ?? "http://localhost:5173")
+const allowedOrigins = env.CLIENT_URL
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);

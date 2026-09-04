@@ -91,6 +91,23 @@
     },
     "video": "https://res.cloudinary.com/sbyx9l2f/video/upload/v1787839515/huwstore/products/fourre-tout-toile-epaisse/video.mp4"
   },
+  "portefeuille-compact": {
+    "images": {
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466443/huwstore/products/portefeuille-compact/noir-1.jpg"
+      ],
+      "rose": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466444/huwstore/products/portefeuille-compact/rose-1.jpg"
+      ],
+      "rouge-brique": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466445/huwstore/products/portefeuille-compact/rouge-brique-1.jpg"
+      ],
+      "vert": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466446/huwstore/products/portefeuille-compact/vert-1.jpg"
+      ]
+    },
+    "video": null
+  },
   "sac-a-dos-cuir-pu": {
     "images": {
       "generic": [
@@ -104,6 +121,34 @@
       "noir": [
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272555/huwstore/products/sac-a-dos-cuir-pu/noir-1.jpg",
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272556/huwstore/products/sac-a-dos-cuir-pu/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "sac-banane-urbain": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466452/huwstore/products/sac-banane-urbain/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466453/huwstore/products/sac-banane-urbain/generic-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466454/huwstore/products/sac-banane-urbain/generic-3.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466455/huwstore/products/sac-banane-urbain/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466456/huwstore/products/sac-banane-urbain/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "sac-main-croco-pu": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466456/huwstore/products/sac-main-croco-pu/generic-1.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466457/huwstore/products/sac-main-croco-pu/marron-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466458/huwstore/products/sac-main-croco-pu/marron-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466459/huwstore/products/sac-main-croco-pu/marron-3.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466459/huwstore/products/sac-main-croco-pu/marron-4.jpg"
       ]
     },
     "video": null
@@ -197,6 +242,24 @@
       "noir": [
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272599/huwstore/products/tote-bag-toile-bandouliere/noir-1.jpg",
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788272600/huwstore/products/tote-bag-toile-bandouliere/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-toile-eco": {
+    "images": {
+      "blanc-creme": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466495/huwstore/products/tote-bag-toile-eco/blanc-creme-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466496/huwstore/products/tote-bag-toile-eco/blanc-creme-2.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466497/huwstore/products/tote-bag-toile-eco/generic-1.jpg"
+      ],
+      "kaki": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466498/huwstore/products/tote-bag-toile-eco/kaki-1.jpg"
+      ],
+      "noir-the": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788466499/huwstore/products/tote-bag-toile-eco/noir-the-1.jpg"
       ]
     },
     "video": null

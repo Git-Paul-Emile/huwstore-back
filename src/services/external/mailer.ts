@@ -7,6 +7,7 @@
  */
 import { CircuitBreaker, resilient } from "../../lib/resilience.js";
 import { logger } from "../../config/logger.js";
+import { env } from "../../config/env.js";
 
 export type MailMessage = {
   to: string;
@@ -70,7 +71,7 @@ let instance: Mailer | undefined;
 export async function getMailer(): Promise<Mailer> {
   if (instance) return instance;
 
-  if (process.env.RESEND_API_KEY) {
+  if (env.RESEND_API_KEY) {
     const { resend, RESEND_FROM_EMAIL } = await import("../../config/resend.js");
     instance = new ResendMailer({
       send: (message) => resend.emails.send(message),

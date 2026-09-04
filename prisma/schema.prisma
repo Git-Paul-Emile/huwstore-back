@@ -237,8 +237,31 @@ model User {
   orders       Order[]
   addresses    Address[]
   wishlist     WishlistItem[]
+  refreshTokens RefreshToken[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+/// Jeton de rafraichissement, stocke et revocable cote serveur (rules/security.md).
+///
+/// On ne garde qu'un hachage SHA-256 du jeton : une fuite de la table ne donne
+/// aucune session exploitable. Chaque connexion ouvre une `family` ; un refresh
+/// revoque le jeton consomme et en emet un nouveau dans la meme famille
+/// (rotation). Si un jeton deja revoque est represente, c'est le signe d'un vol :
+/// toute la famille est revoquee d'un coup (detection de reutilisation).
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  family    String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([family])
+  @@index([expiresAt])
 }
 
 /// Commande. Le montant n'est jamais recu du navigateur : subtotal, shippingFee
@@ -291,9 +314,12 @@ model Order {
   @@index([deliveryZoneId])
 }
 
-/// Carnet d'adresses du client. Une seule adresse peut porter isDefault :
-/// la contrainte est tenue par le service, pas par la base (Postgres ne sait
-/// pas exprimer "un seul true par userId" sans index partiel).
+/// Carnet d'adresses du client. Une seule adresse par client peut porter
+/// isDefault = true : la contrainte est tenue par un index unique PARTIEL cote
+/// base (`Address_userId_default_key`, voir la migration
+/// `20260902090000_adresse_defaut_unique`). Prisma ne sait pas exprimer un
+/// index partiel dans ce schema, l'index est donc pose en SQL brut dans la
+/// migration ; il ne doit pas etre retire.
 model Address {
   id     String @id @default(cuid())
   userId String

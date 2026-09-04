@@ -5,8 +5,8 @@ import { authService } from "../services/auth.service.js";
 import { loginSchema, profileUpdateSchema, registerSchema } from "../validators/auth.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
+import { validBody } from "../middlewares/validate.js";
 import { AppError } from "../utils/AppError.js";
-import { verifyRefreshToken } from "../config/jwt.js";
 import { CSRF_COOKIE, REFRESH_COOKIE, csrfCookieOptions, refreshCookieOptions } from "../config/cookies.js";
 
 /**
@@ -19,17 +19,21 @@ function openSession(res: Response, refreshToken: string) {
   res.cookie(CSRF_COOKIE, randomUUID(), csrfCookieOptions);
 }
 
+/** Efface les deux cookies de session. */
+function clearSession(res: Response) {
+  res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
+  res.clearCookie(CSRF_COOKIE, csrfCookieOptions);
+}
+
 export const authController = {
   register: controllerWrapper(async (req, res) => {
-    const input = registerSchema.parse(req.body);
-    const { refreshToken, ...body } = await authService.register(input);
+    const { refreshToken, ...body } = await authService.register(validBody(req, registerSchema));
     openSession(res, refreshToken);
     jsonResponse(res, StatusCodes.CREATED, "success", "Compte créé.", body);
   }),
 
   login: controllerWrapper(async (req, res) => {
-    const input = loginSchema.parse(req.body);
-    const { refreshToken, ...body } = await authService.login(input);
+    const { refreshToken, ...body } = await authService.login(validBody(req, loginSchema));
     openSession(res, refreshToken);
     jsonResponse(res, StatusCodes.OK, "success", "Connexion réussie.", body);
   }),
@@ -39,31 +43,29 @@ export const authController = {
    *
    * Le jeton d'accès ne vit que 15 minutes : sans cette route, la cliente serait
    * déconnectée en pleine commande. Le cookie de rafraîchissement, lui, vit
-   * 30 jours et n'est jamais exposé au JavaScript.
-   *
-   * Rotation : un nouveau jeton de rafraîchissement est émis à chaque appel, ce
-   * qui raccourcit la durée de vie utile d'un jeton qui aurait fuité.
+   * 30 jours et n'est jamais exposé au JavaScript. La rotation (révocation de
+   * l'ancien jeton, émission d'un nouveau) et la détection de réutilisation
+   * vivent dans `authService.refresh`.
    */
   refresh: controllerWrapper(async (req, res) => {
     const token = req.cookies?.[REFRESH_COOKIE];
     if (!token) throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
 
-    let payload;
     try {
-      payload = verifyRefreshToken(token);
-    } catch {
-      res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
-      throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+      const { refreshToken, ...body } = await authService.refresh(token);
+      openSession(res, refreshToken);
+      jsonResponse(res, StatusCodes.OK, "success", "Session renouvelée.", body);
+    } catch (error) {
+      // Jeton refusé : on retire les cookies pour que le front repasse anonyme
+      // plutôt que de boucler sur un refresh voué à échouer.
+      clearSession(res);
+      throw error;
     }
-
-    const { refreshToken, ...body } = await authService.refresh(payload.userId);
-    openSession(res, refreshToken);
-    jsonResponse(res, StatusCodes.OK, "success", "Session renouvelée.", body);
   }),
 
-  logout: controllerWrapper(async (_req, res) => {
-    res.clearCookie(REFRESH_COOKIE, refreshCookieOptions);
-    res.clearCookie(CSRF_COOKIE, csrfCookieOptions);
+  logout: controllerWrapper(async (req, res) => {
+    await authService.logout(req.cookies?.[REFRESH_COOKIE]);
+    clearSession(res);
     jsonResponse(res, StatusCodes.OK, "success", "Déconnecté.");
   }),
 
@@ -75,8 +77,7 @@ export const authController = {
 
   updateMe: controllerWrapper(async (req, res) => {
     if (!req.user) throw AppError.unauthorized();
-    const input = profileUpdateSchema.parse(req.body);
-    const user = await authService.updateProfile(req.user.userId, input);
+    const user = await authService.updateProfile(req.user.userId, validBody(req, profileUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Informations mises à jour.", user);
   }),
 };

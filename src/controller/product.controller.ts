@@ -3,12 +3,12 @@ import { getParam } from "../utils/getParam.js";
 import { productService } from "../services/product.service.js";
 import { productSchema, productUpdateSchema, productListQuerySchema } from "../validators/product.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
-import { jsonResponse } from "../utils/jsonResponse.js";
+import { jsonResponse, noContent } from "../utils/jsonResponse.js";
+import { validBody, validQuery } from "../middlewares/validate.js";
 
 export const productController = {
   list: controllerWrapper(async (req, res) => {
-    const query = productListQuerySchema.parse(req.query);
-    const { items, meta } = await productService.list(query);
+    const { items, meta } = await productService.list(validQuery(req, productListQuerySchema));
     jsonResponse(res, StatusCodes.OK, "success", "Produits récupérés.", items, meta);
   }),
 
@@ -24,19 +24,17 @@ export const productController = {
   }),
 
   create: controllerWrapper(async (req, res) => {
-    const input = productSchema.parse(req.body);
-    const product = await productService.create(input);
+    const product = await productService.create(validBody(req, productSchema));
     jsonResponse(res, StatusCodes.CREATED, "success", "Produit créé.", product);
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = productUpdateSchema.parse(req.body);
-    const product = await productService.update(getParam(req, "id"), input);
+    const product = await productService.update(getParam(req, "id"), validBody(req, productUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Produit mis à jour.", product);
   }),
 
   remove: controllerWrapper(async (req, res) => {
     await productService.remove(getParam(req, "id"));
-    jsonResponse(res, StatusCodes.OK, "success", "Produit désactivé.");
+    noContent(res);
   }),
 };

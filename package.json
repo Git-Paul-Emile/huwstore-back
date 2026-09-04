@@ -13,10 +13,11 @@
     "format": "prettier --write .",
     "audit": "npm audit --audit-level=high",
     "media:upload": "tsx scripts/upload-media.ts",
-    "test": "node --import tsx --test \"src/**/*.test.ts\"",
-    "test:watch": "node --import tsx --test --watch \"src/**/*.test.ts\"",
-    "test:integration": "node --import tsx --test \"src/**/*.itest.ts\"",
-    "db:purge-demo": "tsx scripts/purge-demo.ts"
+    "test": "node --env-file-if-exists=.env --import tsx --test \"src/**/*.test.ts\"",
+    "test:watch": "node --env-file-if-exists=.env --import tsx --test --watch \"src/**/*.test.ts\"",
+    "test:integration": "node --env-file-if-exists=.env --import tsx --test \"src/**/*.itest.ts\"",
+    "db:purge-demo": "tsx scripts/purge-demo.ts",
+    "db:purge-e2e": "tsx scripts/purge-e2e.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.1.0",

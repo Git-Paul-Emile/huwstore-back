@@ -4,6 +4,7 @@ import { orderService } from "../services/order.service.js";
 import { orderCreateSchema, orderUpdateSchema, orderListQuerySchema } from "../validators/order.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
+import { validBody, validQuery } from "../middlewares/validate.js";
 import { AppError } from "../utils/AppError.js";
 import { toCsv } from "../services/csv.service.js";
 import { invoiceService } from "../services/invoice.service.js";
@@ -11,8 +12,7 @@ import { settingService } from "../services/setting.service.js";
 
 export const orderController = {
   list: controllerWrapper(async (req, res) => {
-    const query = orderListQuerySchema.parse(req.query);
-    const { items, meta } = await orderService.list(query);
+    const { items, meta } = await orderService.list(validQuery(req, orderListQuerySchema));
     jsonResponse(res, StatusCodes.OK, "success", "Commandes récupérées.", items, meta);
   }),
 
@@ -52,8 +52,7 @@ export const orderController = {
 
   /** Export back-office : le cahier et le fichier Excel qu'il remplace. */
   exportCsv: controllerWrapper(async (req, res) => {
-    const query = orderListQuerySchema.parse(req.query);
-    const orders = await orderService.listAllFiltered(query);
+    const orders = await orderService.listAllFiltered(validQuery(req, orderListQuerySchema));
 
     const csv = toCsv(orders, [
       { header: "Commande", value: (o) => o.id },
@@ -88,14 +87,12 @@ export const orderController = {
    */
   create: controllerWrapper(async (req, res) => {
     if (!req.user) throw AppError.unauthorized();
-    const input = orderCreateSchema.parse(req.body);
-    const order = await orderService.create(input, req.user.userId);
+    const order = await orderService.create(validBody(req, orderCreateSchema), req.user.userId);
     jsonResponse(res, StatusCodes.CREATED, "success", "Commande créée.", order);
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = orderUpdateSchema.parse(req.body);
-    const order = await orderService.update(getParam(req, "id"), input);
+    const order = await orderService.update(getParam(req, "id"), validBody(req, orderUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Commande mise à jour.", order);
   }),
 };

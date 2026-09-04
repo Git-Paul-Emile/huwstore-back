@@ -3,6 +3,9 @@ import { AppError } from "../utils/AppError.js";
 import { verifyAccessToken, type JwtPayload } from "../config/jwt.js";
 
 declare global {
+  // Augmenter Express.Request impose la syntaxe `namespace` : c'est l'API
+  // d'extension de types fournie par @types/express, il n'existe pas
+  // d'équivalent en `module`. Désactivation limitée à ce bloc.
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {

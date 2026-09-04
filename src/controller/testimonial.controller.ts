@@ -3,7 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { testimonialService } from "../services/testimonial.service.js";
 import { testimonialSchema, testimonialUpdateSchema } from "../validators/testimonial.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
-import { jsonResponse } from "../utils/jsonResponse.js";
+import { jsonResponse, noContent } from "../utils/jsonResponse.js";
+import { validBody } from "../middlewares/validate.js";
 
 export const testimonialController = {
   list: controllerWrapper(async (_req, res) => {
@@ -12,19 +13,17 @@ export const testimonialController = {
   }),
 
   create: controllerWrapper(async (req, res) => {
-    const input = testimonialSchema.parse(req.body);
-    const testimonial = await testimonialService.create(input);
+    const testimonial = await testimonialService.create(validBody(req, testimonialSchema));
     jsonResponse(res, StatusCodes.CREATED, "success", "Témoignage créé.", testimonial);
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = testimonialUpdateSchema.parse(req.body);
-    const testimonial = await testimonialService.update(getParam(req, "id"), input);
+    const testimonial = await testimonialService.update(getParam(req, "id"), validBody(req, testimonialUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Témoignage mis à jour.", testimonial);
   }),
 
   remove: controllerWrapper(async (req, res) => {
     await testimonialService.remove(getParam(req, "id"));
-    jsonResponse(res, StatusCodes.OK, "success", "Témoignage supprimé.");
+    noContent(res);
   }),
 };

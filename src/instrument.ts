@@ -11,16 +11,17 @@
  * la variable de `.env` suffit à désactiver l'envoi en local.
  */
 import * as Sentry from "@sentry/node";
+import { env } from "./config/env.js";
 
-const dsn = process.env.SENTRY_DSN;
+const dsn = env.SENTRY_DSN;
 
 if (dsn) {
   Sentry.init({
     dsn,
-    environment: process.env.NODE_ENV ?? "development",
+    environment: env.NODE_ENV,
     // Traces de performance : 100 % par défaut (faible trafic) ; abaisser via
     // SENTRY_TRACES_SAMPLE_RATE si le volume devient coûteux.
-    tracesSampleRate: Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? 1),
+    tracesSampleRate: env.SENTRY_TRACES_SAMPLE_RATE,
     // On n'envoie ni IP, ni en-têtes, ni corps de requête : les données des
     // clientes ne partent pas chez un tiers.
     sendDefaultPii: false,

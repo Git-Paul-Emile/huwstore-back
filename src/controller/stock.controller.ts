@@ -3,6 +3,7 @@ import { stockService } from "../services/stock.service.js";
 import { stockAdjustSchema } from "../validators/stock.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
 import { jsonResponse } from "../utils/jsonResponse.js";
+import { validBody } from "../middlewares/validate.js";
 import { toCsv } from "../services/csv.service.js";
 
 export const stockController = {
@@ -36,8 +37,7 @@ export const stockController = {
   }),
 
   adjust: controllerWrapper(async (req, res) => {
-    const input = stockAdjustSchema.parse(req.body);
-    const movement = await stockService.adjust(input);
+    const movement = await stockService.adjust(validBody(req, stockAdjustSchema));
     jsonResponse(res, StatusCodes.CREATED, "success", "Stock ajusté.", movement);
   }),
 };

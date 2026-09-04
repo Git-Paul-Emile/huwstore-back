@@ -13,12 +13,13 @@
  * change, puisque tout le code passe par `logger`.
  */
 
+import { env, isProduction } from "./env.js";
+
 type Level = "debug" | "info" | "warn" | "error";
 
 const LEVEL_ORDER: Record<Level, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
-const isProduction = process.env.NODE_ENV === "production";
-const minimum = LEVEL_ORDER[(process.env.LOG_LEVEL as Level) ?? (isProduction ? "info" : "debug")] ?? 20;
+const minimum = LEVEL_ORDER[env.LOG_LEVEL ?? (isProduction ? "info" : "debug")];
 
 /** Champs qui ne doivent JAMAIS atterrir dans un journal, même par accident. */
 const SECRETS = new Set([

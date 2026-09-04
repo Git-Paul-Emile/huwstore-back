@@ -3,7 +3,8 @@ import { StatusCodes } from "http-status-codes";
 import { deliveryZoneService } from "../services/deliveryZone.service.js";
 import { deliveryZoneSchema, deliveryZoneUpdateSchema } from "../validators/deliveryZone.validator.js";
 import { controllerWrapper } from "../utils/controllerWrapper.js";
-import { jsonResponse } from "../utils/jsonResponse.js";
+import { jsonResponse, noContent } from "../utils/jsonResponse.js";
+import { validBody } from "../middlewares/validate.js";
 
 export const deliveryZoneController = {
   list: controllerWrapper(async (_req, res) => {
@@ -12,19 +13,17 @@ export const deliveryZoneController = {
   }),
 
   create: controllerWrapper(async (req, res) => {
-    const input = deliveryZoneSchema.parse(req.body);
-    const zone = await deliveryZoneService.create(input);
+    const zone = await deliveryZoneService.create(validBody(req, deliveryZoneSchema));
     jsonResponse(res, StatusCodes.CREATED, "success", "Zone de livraison créée.", zone);
   }),
 
   update: controllerWrapper(async (req, res) => {
-    const input = deliveryZoneUpdateSchema.parse(req.body);
-    const zone = await deliveryZoneService.update(getParam(req, "id"), input);
+    const zone = await deliveryZoneService.update(getParam(req, "id"), validBody(req, deliveryZoneUpdateSchema));
     jsonResponse(res, StatusCodes.OK, "success", "Zone de livraison mise à jour.", zone);
   }),
 
   remove: controllerWrapper(async (req, res) => {
     await deliveryZoneService.remove(getParam(req, "id"));
-    jsonResponse(res, StatusCodes.OK, "success", "Zone de livraison supprimée.");
+    noContent(res);
   }),
 };

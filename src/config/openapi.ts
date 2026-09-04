@@ -30,6 +30,9 @@ const ok = (description: string, schema: object, paginated = false) => ({
   ...json(envelope(schema, paginated)),
 });
 
+/** Suppression réussie : 204 sans corps (rules/api.md). */
+const noContent = { description: "Ressource supprimée." };
+
 const errors = {
   400: { description: "Données invalides.", ...json(ref("ErrorResponse")) },
   401: { description: "Authentification requise.", ...json(ref("ErrorResponse")) },
@@ -196,7 +199,7 @@ export const openApiDocument = {
         description: "Désactivation et non suppression : les commandes passées le référencent.",
         security: adminSecurity,
         parameters: [idParam],
-        responses: { 200: ok("Produit désactivé.", { type: "null" }), ...errors },
+        responses: { 204: noContent, ...errors },
       },
     },
 
@@ -228,7 +231,7 @@ export const openApiDocument = {
         summary: "Supprimer une catégorie vide",
         security: adminSecurity,
         parameters: [idParam],
-        responses: { 200: ok("Catégorie supprimée.", { type: "null" }), ...errors },
+        responses: { 204: noContent, ...errors },
       },
     },
 
@@ -384,7 +387,7 @@ export const openApiDocument = {
         tags: ["Back-office"],
         summary: "Supprimer un avis",
         security: adminSecurity,
-        responses: { 200: ok("Avis supprimé.", { type: "null" }), ...errors },
+        responses: { 204: noContent, ...errors },
       },
     },
     "/settings": {
@@ -572,8 +575,17 @@ export const openApiDocument = {
           id: { type: "string" },
           name: { type: "string" },
           slug: { type: "string" },
-          image: { type: "string", format: "uri" },
+          image: { type: "string", format: "uri", description: "Visuel de repli saisi au back-office." },
+          description: { type: "string", nullable: true },
           position: { type: "integer" },
+          preview: {
+            type: "array",
+            description: "Jusqu'à 4 photos de produits de la catégorie, pour la vignette d'accueil.",
+            items: {
+              type: "object",
+              properties: { url: { type: "string", format: "uri" }, alt: { type: "string" } },
+            },
+          },
           products: { type: "integer", description: "Nombre de produits rattachés." },
         },
       },
