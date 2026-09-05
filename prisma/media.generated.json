@@ -50,6 +50,22 @@
     },
     "video": null
   },
+  "cabas-souple-oxford-pu": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565458/huwstore/products/cabas-souple-oxford-pu/generic-1.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565460/huwstore/products/cabas-souple-oxford-pu/marron-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565461/huwstore/products/cabas-souple-oxford-pu/marron-2.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565462/huwstore/products/cabas-souple-oxford-pu/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565466/huwstore/products/cabas-souple-oxford-pu/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
   "fourre-tout-oxford": {
     "images": {
       "beige": [
@@ -153,6 +169,23 @@
     },
     "video": null
   },
+  "sac-main-cuir-pu": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565542/huwstore/products/sac-main-cuir-pu/generic-1.jpg"
+      ],
+      "marron": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565546/huwstore/products/sac-main-cuir-pu/marron-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565551/huwstore/products/sac-main-cuir-pu/marron-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565553/huwstore/products/sac-main-cuir-pu/marron-3.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565558/huwstore/products/sac-main-cuir-pu/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565563/huwstore/products/sac-main-cuir-pu/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
   "sac-main-patchwork-pu": {
     "images": {
       "bleu": [
@@ -224,6 +257,45 @@
       "noir": [
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839536/huwstore/products/tote-bag-freedom/noir-1.jpg",
         "https://res.cloudinary.com/sbyx9l2f/image/upload/v1787839537/huwstore/products/tote-bag-freedom/noir-2.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-multifonction": {
+    "images": {
+      "blanc": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565685/huwstore/products/tote-bag-multifonction/blanc-1.jpg"
+      ],
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565687/huwstore/products/tote-bag-multifonction/generic-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565688/huwstore/products/tote-bag-multifonction/generic-2.jpg"
+      ],
+      "jaune": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565691/huwstore/products/tote-bag-multifonction/jaune-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565695/huwstore/products/tote-bag-multifonction/jaune-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565696/huwstore/products/tote-bag-multifonction/jaune-3.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565698/huwstore/products/tote-bag-multifonction/noir-1.jpg"
+      ],
+      "rose": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565699/huwstore/products/tote-bag-multifonction/rose-1.jpg"
+      ]
+    },
+    "video": null
+  },
+  "tote-bag-run-alone": {
+    "images": {
+      "generic": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565701/huwstore/products/tote-bag-run-alone/generic-1.jpg"
+      ],
+      "noir": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565702/huwstore/products/tote-bag-run-alone/noir-1.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565704/huwstore/products/tote-bag-run-alone/noir-2.jpg",
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565705/huwstore/products/tote-bag-run-alone/noir-3.jpg"
+      ],
+      "vert": [
+        "https://res.cloudinary.com/sbyx9l2f/image/upload/v1788565707/huwstore/products/tote-bag-run-alone/vert-1.jpg"
       ]
     },
     "video": null
