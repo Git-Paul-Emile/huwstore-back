@@ -1,5 +1,7 @@
 import { categoryRepository, type CategoryRow } from "../repositories/category.repository.js";
 import { productRepository } from "../repositories/product.repository.js";
+import { enqueueMediaCleanup } from "../queue/index.js";
+import { catalogCache } from "./catalog-cache.js";
 import { AppError } from "../utils/AppError.js";
 import { slugify } from "../utils/slugify.js";
 import type { categorySchema, categoryUpdateSchema } from "../validators/category.validator.js";
@@ -73,18 +75,20 @@ function toDto(category: CategoryRow, covers: { url: string; alt: string }[]) {
 /**
  * Liste des univers, vignettes comprises.
  *
- * Pas de cache : les deux lectures sont ciblées (un `select` par requête, sans
- * `take` imbriqué, donc pas de N+1) et la fraîcheur prime - une catégorie créée
- * au back-office doit apparaître tout de suite en vitrine. On l'ajoutera si une
- * mesure montre que l'endpoint pèse.
+ * Mise en cache (60 s, `catalogCache`) : l'endpoint est appelé sur chaque page
+ * de la vitrine et sa composition (deux requêtes plus le calcul des mosaïques)
+ * n'a pas à être refaite à chaque visite. Le cache est vidé par toute écriture
+ * de catégorie ET de produit - une vignette est composée de photos produits.
  */
 export async function buildCategoryList() {
-  const [categories, recentProducts] = await Promise.all([
-    categoryRepository.findAll(),
-    productRepository.findCategoryCoverSources(RECENT_PRODUCTS_SCANNED),
-  ]);
-  const covers = coversByCategory(recentProducts);
-  return categories.map((category) => toDto(category, covers.get(category.id) ?? []));
+  return catalogCache.remember("categories:list", async () => {
+    const [categories, recentProducts] = await Promise.all([
+      categoryRepository.findAll(),
+      productRepository.findCategoryCoverSources(RECENT_PRODUCTS_SCANNED),
+    ]);
+    const covers = coversByCategory(recentProducts);
+    return categories.map((category) => toDto(category, covers.get(category.id) ?? []));
+  });
 }
 
 export const categoryService = {
@@ -93,13 +97,24 @@ export const categoryService = {
   async create(input: z.infer<typeof categorySchema>) {
     const existing = await categoryRepository.findByName(input.name);
     if (existing) throw AppError.conflict("Cette catégorie existe déjà.");
-    return categoryRepository.create({ ...input, slug: input.slug ?? slugify(input.name) });
+    const category = await categoryRepository.create({ ...input, slug: input.slug ?? slugify(input.name) });
+    catalogCache.invalidate();
+    return category;
   },
 
   async update(id: string, input: z.infer<typeof categoryUpdateSchema>) {
     const category = await categoryRepository.findById(id);
     if (!category) throw AppError.notFound("Catégorie introuvable.");
-    return categoryRepository.update(id, input);
+
+    const updated = await categoryRepository.update(id, input);
+    catalogCache.invalidate();
+
+    // Visuel remplacé : l'ancien fichier n'est plus utilisé. Le stockage ignore
+    // de lui-même un visuel de seed ou un chemin local.
+    if (input.image && input.image !== category.image) {
+      enqueueMediaCleanup([{ url: category.image }]);
+    }
+    return updated;
   },
 
   async remove(id: string) {
@@ -112,5 +127,7 @@ export const categoryService = {
     if (count > 0) throw AppError.conflict(`Cette catégorie contient encore ${count} produit(s).`);
 
     await categoryRepository.remove(id);
+    catalogCache.invalidate();
+    enqueueMediaCleanup([{ url: category.image }]);
   },
 };

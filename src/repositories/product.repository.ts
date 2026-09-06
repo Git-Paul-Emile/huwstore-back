@@ -151,6 +151,20 @@ export const productRepository = {
 
   remove: (id: string) => prisma.product.delete({ where: { id } }),
 
+  /**
+   * Nombre de lignes de commande qui référencent ce produit. Sert de garde-fou
+   * avant une suppression définitive : au-dessus de zéro, on archive.
+   */
+  countOrderItems: (id: string) => prisma.orderItem.count({ where: { productId: id } }),
+
+  /**
+   * Toutes les URL d'images du produit, coloris archivés compris. Lu avant une
+   * suppression pour pouvoir nettoyer le stockage externe : la cascade SQL
+   * efface les lignes `ProductImage`, pas les fichiers Cloudinary.
+   */
+  listImageUrls: (id: string) =>
+    prisma.productImage.findMany({ where: { productId: id }, select: { url: true } }),
+
   /** Liste des valeurs distinctes utilisées comme facettes de filtre côté boutique. */
   distinctMaterials: () =>
     prisma.product.findMany({ where: { active: true }, select: { material: true }, distinct: ["material"] }),

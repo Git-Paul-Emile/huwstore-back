@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { productRepository } from "../repositories/product.repository.js";
 import { buildCategoryList } from "./category.service.js";
+import { catalogCache } from "./catalog-cache.js";
 
 const category = (over: Record<string, unknown> = {}) =>
   ({
@@ -32,7 +33,10 @@ const mockRepos = (categories: unknown[], products: unknown[]) => {
 };
 
 describe("buildCategoryList", () => {
-  afterEach(() => mock.restoreAll());
+  afterEach(() => {
+    mock.restoreAll();
+    catalogCache.invalidate();
+  });
 
   it("compose la couverture depuis les produits : image de déclinaison, sinon image de fiche", async () => {
     mockRepos(
@@ -85,6 +89,7 @@ describe("buildCategoryList", () => {
       "https://res.cloudinary.com/x/image/upload/v1/huwstore/univers/toile-coton.webp",
     ]) {
       mock.restoreAll();
+      catalogCache.invalidate();
       mockRepos([category({ image })], [product("c1", "Sac A", "https://cdn/a.jpg")]);
       const [dto] = await buildCategoryList();
       assert.deepEqual(

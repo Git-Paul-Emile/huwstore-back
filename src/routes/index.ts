@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { authRoutes } from "./auth.routes.js";
 import { productRoutes } from "./product.routes.js";
+import { productOptionRoutes } from "./product-option.routes.js";
 import { categoryRoutes } from "./category.routes.js";
 import { deliveryZoneRoutes } from "./deliveryZone.routes.js";
 import { orderRoutes } from "./order.routes.js";
@@ -20,6 +21,7 @@ export const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/products", productRoutes);
+router.use("/product-options", productOptionRoutes);
 router.use("/categories", categoryRoutes);
 router.use("/delivery-zones", deliveryZoneRoutes);
 router.use("/orders", orderRoutes);

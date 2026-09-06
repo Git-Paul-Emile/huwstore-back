@@ -1,4 +1,5 @@
 import { testimonialRepository } from "../repositories/testimonial.repository.js";
+import { enqueueMediaCleanup } from "../queue/index.js";
 import { AppError } from "../utils/AppError.js";
 import type { testimonialSchema, testimonialUpdateSchema } from "../validators/testimonial.validator.js";
 import type { z } from "zod";
@@ -32,6 +33,11 @@ export const testimonialService = {
     const existing = await testimonialRepository.findById(id);
     if (!existing) throw AppError.notFound("Témoignage introuvable.");
     const testimonial = await testimonialRepository.update(id, input);
+
+    // Avatar remplacé : l'ancien fichier devient orphelin.
+    if (input.avatar && existing.avatar && input.avatar !== existing.avatar) {
+      enqueueMediaCleanup([{ url: existing.avatar }]);
+    }
     return toDto(testimonial);
   },
 
@@ -39,5 +45,6 @@ export const testimonialService = {
     const existing = await testimonialRepository.findById(id);
     if (!existing) throw AppError.notFound("Témoignage introuvable.");
     await testimonialRepository.remove(id);
+    enqueueMediaCleanup([{ url: existing.avatar }]);
   },
 };

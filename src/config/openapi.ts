@@ -358,6 +358,38 @@ export const openApiDocument = {
         responses: { 200: ok("Témoignages récupérés.", list("Testimonial")) },
       },
     },
+    "/product-options": {
+      get: {
+        tags: ["Back-office"],
+        summary: "Listes déroulantes « Matière » et « Fermeture » du formulaire produit",
+        security: adminSecurity,
+        responses: { 200: ok("Listes de valeurs récupérées.", ref("ProductOptionLists")), ...errors },
+      },
+      post: {
+        tags: ["Back-office"],
+        summary: "Ajouter une valeur à une liste",
+        security: adminSecurity,
+        requestBody: { required: true, ...json(ref("ProductOptionInput")) },
+        responses: { 201: ok("Valeur ajoutée.", ref("ProductOption")), ...errors },
+      },
+    },
+    "/product-options/{id}": {
+      parameters: [idParam],
+      patch: {
+        tags: ["Back-office"],
+        summary: "Renommer ou repositionner une valeur",
+        security: adminSecurity,
+        requestBody: { required: true, ...json(ref("ProductOptionUpdateInput")) },
+        responses: { 200: ok("Valeur mise à jour.", ref("ProductOption")), ...errors },
+      },
+      delete: {
+        tags: ["Back-office"],
+        summary: "Retirer une valeur de la liste",
+        description: "Les fiches produits déjà saisies avec cette valeur la conservent (elle est stockée en texte).",
+        security: adminSecurity,
+        responses: { 204: noContent, ...errors },
+      },
+    },
     "/feedback": {
       post: {
         tags: ["Avis"],
@@ -828,6 +860,38 @@ export const openApiDocument = {
         required: ["read"],
         properties: {
           read: { type: "boolean" },
+        },
+      },
+      ProductOption: {
+        type: "object",
+        properties: {
+          id: { type: "string" },
+          kind: { type: "string", enum: ["matiere", "fermeture"] },
+          label: { type: "string" },
+          position: { type: "integer" },
+        },
+      },
+      ProductOptionLists: {
+        type: "object",
+        properties: {
+          matiere: list("ProductOption"),
+          fermeture: list("ProductOption"),
+        },
+      },
+      ProductOptionInput: {
+        type: "object",
+        required: ["kind", "label"],
+        properties: {
+          kind: { type: "string", enum: ["matiere", "fermeture"] },
+          label: { type: "string" },
+          position: { type: "integer" },
+        },
+      },
+      ProductOptionUpdateInput: {
+        type: "object",
+        properties: {
+          label: { type: "string" },
+          position: { type: "integer" },
         },
       },
       Settings: {

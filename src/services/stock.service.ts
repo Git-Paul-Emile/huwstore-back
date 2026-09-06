@@ -1,4 +1,5 @@
 import { stockRepository } from "../repositories/stock.repository.js";
+import { catalogCache } from "./catalog-cache.js";
 import { AppError } from "../utils/AppError.js";
 import { stockMoveTypeMap } from "../utils/enumMaps.js";
 import type { stockAdjustSchema } from "../validators/stock.validator.js";
@@ -55,6 +56,9 @@ export const stockService = {
       },
       variant.stock?.threshold ?? 5,
     );
+
+    // La disponibilité et le badge « Rupture » de la vitrine dépendent du stock.
+    catalogCache.invalidate();
 
     return {
       id: movement.id,

@@ -3,6 +3,7 @@ import { orderRepository } from "../repositories/order.repository.js";
 import { AppError } from "../utils/AppError.js";
 import { deliveryModeMap, orderStatusMap, payMethodMap, payStatusMap } from "../utils/enumMaps.js";
 import { pricingService } from "./pricing.service.js";
+import { catalogCache } from "./catalog-cache.js";
 import { jobQueue, JOBS } from "../queue/index.js";
 import { logger } from "../config/logger.js";
 import type { orderCreateSchema, orderUpdateSchema, orderListQuerySchema } from "../validators/order.validator.js";
@@ -170,6 +171,10 @@ export const orderService = {
     );
 
     logger.info({ orderId: order.id, total: order.total }, "Commande enregistrée");
+
+    // La vente a décrémenté le stock : la disponibilité et le badge « Rupture »
+    // affichés en vitrine peuvent avoir changé.
+    catalogCache.invalidate();
 
     const dto = toDto(order);
 

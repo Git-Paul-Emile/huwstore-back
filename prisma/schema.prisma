@@ -81,6 +81,12 @@ enum StockMoveType {
   VENTE
 }
 
+/// Deux listes de valeurs proposees a la saisie d'un produit (voir ProductOption).
+enum ProductOptionKind {
+  MATIERE
+  FERMETURE
+}
+
 model Category {
   id        String    @id @default(cuid())
   name      String    @unique
@@ -461,6 +467,25 @@ model Testimonial {
   updatedAt DateTime @updatedAt
 
   @@index([active, position])
+}
+
+/// Valeurs proposees en liste deroulante a la saisie d'un produit : matiere et
+/// type de fermeture. Gerees depuis le back-office.
+///
+/// Le produit garde la valeur choisie EN TEXTE (colonnes Product.material /
+/// Product.closure), pas une cle etrangere : retirer ou renommer une option ne
+/// reecrit jamais les fiches deja enregistrees, et l'historique des commandes
+/// reste stable.
+model ProductOption {
+  id        String            @id @default(cuid())
+  kind      ProductOptionKind
+  label     String
+  position  Int               @default(0)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([kind, label])
+  @@index([kind, position])
 }
 
 /// Avis libre depose par une visiteuse sur le site lui-meme (pas sur un

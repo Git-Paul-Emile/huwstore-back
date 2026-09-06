@@ -25,4 +25,18 @@ export const mediaService = {
       resourceType: input.kind,
     });
   },
+
+  /**
+   * Retire un média orphelin du stockage externe : produit ou catégorie
+   * supprimé, photo remplacée dans une galerie, vidéo retirée. Les lignes SQL
+   * partent en cascade, pas les fichiers du fournisseur.
+   *
+   * Point d'entrée du job `media.cleanup` (rules/async.md) : la suppression
+   * métier est déjà actée, ce nettoyage la suit sans la retarder. Idempotent,
+   * donc rejouable sans risque.
+   */
+  async remove(asset: { url: string; kind?: "image" | "video" }) {
+    const store = await getImageStore();
+    await store.destroy(asset.url, asset.kind ?? "image");
+  },
 };

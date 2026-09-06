@@ -45,6 +45,13 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return;
   }
 
+  // Violation d'une cle etrangere (ex. suppression d'un element encore
+  // reference par une commande) : 409, pas 500.
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2003") {
+    jsonResponse(res, 409, "fail", "Cet élément est référencé ailleurs et ne peut pas être supprimé.");
+    return;
+  }
+
   monitoring.captureException(err, {
     method: req.method,
     path: req.originalUrl,

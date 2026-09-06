@@ -237,6 +237,31 @@ async function seedOperations() {
 }
 
 /**
+ * Listes déroulantes « Matière » et « Fermeture » du formulaire produit.
+ *
+ * On amorce à partir des valeurs RÉELLEMENT présentes dans le catalogue, pour
+ * qu'aucune fiche existante n'affiche une valeur absente de sa liste. La
+ * boutique nettoie ensuite ces libellés depuis le back-office.
+ */
+async function seedProductOptions() {
+  const materials = [...new Set(products.map((p) => p.material).filter(Boolean))];
+  const closures = [...new Set(products.map((p) => p.closure).filter((c): c is string => Boolean(c)))];
+
+  const rows = [
+    ...materials.map((label, position) => ({ kind: "MATIERE" as const, label, position })),
+    ...closures.map((label, position) => ({ kind: "FERMETURE" as const, label, position })),
+  ];
+
+  for (const row of rows) {
+    await prisma.productOption.upsert({
+      where: { kind_label: { kind: row.kind, label: row.label } },
+      update: {},
+      create: row,
+    });
+  }
+}
+
+/**
  * Amorçage du back-office.
  *
  * On n'écrit ici QUE des données réelles et nécessaires au premier démarrage :
@@ -354,6 +379,7 @@ async function seedBackOffice() {
 
 async function main() {
   await seedCatalog();
+  await seedProductOptions();
   await seedOperations();
   await seedBackOffice();
 

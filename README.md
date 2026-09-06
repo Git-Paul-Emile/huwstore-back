@@ -311,6 +311,14 @@ fournisseur tombé). Façade `resilient()`, utilisée par les adaptateurs.
 (`queue/index.ts`) au lieu de retarder la réponse HTTP. `jobQueue.drain()` est
 appelé à l'arrêt (SIGTERM) pour ne pas perdre d'envoi.
 
+Le job `media.cleanup` (`enqueueMediaCleanup`) y passe aussi : supprimer un
+produit, une catégorie, une bannière ou un témoignage efface les lignes SQL en
+cascade, **pas** les fichiers Cloudinary. Les services de suppression et de
+remplacement (photo de galerie retirée, vidéo changée, visuel de catégorie
+remplacé) empilent donc le nettoyage du stockage, clé d'idempotence par URL.
+`ImageStore.destroy` ignore de lui-même un chemin local ou un visuel de seed
+partagé (`huwstore/univers/`).
+
 > Ce n'est pas une file durable : un redémarrage perd les jobs en attente.
 > Compromis assumé pour rester sans Redis ; l'API reste mono-instance.
 
@@ -320,6 +328,15 @@ appelé à l'arrêt (SIGTERM) pour ne pas perdre d'envoi.
 - `lib/cache.ts` : cache TTL mémoire. Les paramètres boutique sont mis en cache
   60 s (lus à chaque e-mail, facture et chargement de vitrine), invalidés à
   l'écriture.
+- `services/catalog-cache.ts` : même `TtlCache` (60 s) sur les lectures du
+  catalogue public - liste et facettes produits, vignettes des univers.
+  Invalidation globale par toute écriture de produit, de catégorie, de stock et
+  par la création d'une commande. La vue back-office (`?all`) n'est jamais
+  cachée.
+- `middlewares/httpCache.ts` : `Cache-Control: public, max-age=..., stale-while-revalidate=...`
+  sur les GET publics (produits, catégories, bannières, témoignages). Le
+  navigateur sert la copie en cache tout de suite puis rafraîchit derrière.
+  `no-store` dès qu'il y a un `Authorization` ou un `?all`.
 
 ### Observabilité (`rules/observability.md`)
 
@@ -408,6 +425,17 @@ l'**état complet** voulu des coloris : un `id` présent met à jour un coloris
 existant (libellés, teintes, galerie), un `id` absent en crée un, un coloris
 existant absent de la liste est **archivé** (jamais supprimé — `OrderItem` et
 `StockMovement` y renvoient). Le stock reste piloté par `/stock`.
+
+### Listes « Matière » et « Fermeture »
+
+`ProductOption` (`kind` MATIERE | FERMETURE, `label`, `position`) : les valeurs
+proposées en liste déroulante à la saisie d'un produit, gérées depuis le
+back-office (`/product-options`, admin). La fiche produit garde la valeur choisie
+**en texte** (`Product.material` / `Product.closure`), pas une clé étrangère :
+retirer ou renommer une option ne réécrit jamais les fiches existantes et
+l'historique des commandes reste stable. Les filtres de la vitrine, eux,
+continuent de venir de `/products/facets` (valeurs réellement présentes). Le seed
+amorce les listes à partir des valeurs du catalogue.
 
 ### Média : vidéo produit
 

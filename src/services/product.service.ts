@@ -1,6 +1,8 @@
 import type { Prisma } from "@prisma/client";
 import { productRepository, type ProductWithRelations } from "../repositories/product.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
+import { enqueueMediaCleanup } from "../queue/index.js";
+import { catalogCache, catalogKey } from "./catalog-cache.js";
 import { AppError } from "../utils/AppError.js";
 import { productBadgeMap } from "../utils/enumMaps.js";
 import { slugify } from "../utils/slugify.js";
@@ -119,58 +121,66 @@ function toOrderBy(sort: z.infer<typeof productListQuerySchema>["sort"]): Prisma
   }
 }
 
+/** Corps de `productService.list`, extrait pour être mémorisable tel quel. */
+async function listProducts(query: z.infer<typeof productListQuerySchema>) {
+  const where: Prisma.ProductWhereInput = query.all ? {} : { active: true };
+
+  // Les trois filtres acceptent plusieurs valeurs : a l'interieur d'un meme
+  // filtre les valeurs s'additionnent (OU), entre filtres elles se cumulent
+  // (ET) - c'est le comportement attendu d'une boutique a facettes.
+  if (query.category) {
+    where.category = { OR: [{ name: { in: query.category } }, { slug: { in: query.category } }] };
+  }
+  if (query.material) where.material = { in: query.material };
+  if (query.color) {
+    where.variants = {
+      some: { active: true, OR: [{ colorSlug: { in: query.color } }, { colorName: { in: query.color } }] },
+    };
+  }
+  if (query.minPrice !== undefined || query.maxPrice !== undefined) {
+    where.price = {
+      ...(query.minPrice !== undefined && { gte: query.minPrice }),
+      ...(query.maxPrice !== undefined && { lte: query.maxPrice }),
+    };
+  }
+  if (query.search) {
+    where.OR = [
+      { name: { contains: query.search, mode: "insensitive" } },
+      { description: { contains: query.search, mode: "insensitive" } },
+      { material: { contains: query.search, mode: "insensitive" } },
+      { collection: { contains: query.search, mode: "insensitive" } },
+    ];
+  }
+
+  const skip = (query.page - 1) * query.limit;
+  const [rows, total] = await Promise.all([
+    productRepository.findAll(where, toOrderBy(query.sort), skip, query.limit),
+    productRepository.count(where),
+  ]);
+
+  return {
+    items: rows.map(toDto),
+    meta: {
+      page: query.page,
+      limit: query.limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / query.limit)),
+      hasNext: skip + rows.length < total,
+      hasPrev: query.page > 1,
+    },
+  };
+}
+
 export const productService = {
   /**
    * Liste paginée, filtrée, triée et recherchable - les quatre attendus d'une
    * collection REST. Renvoie les données ET les métadonnées de pagination.
    */
   async list(query: z.infer<typeof productListQuerySchema>) {
-    const where: Prisma.ProductWhereInput = query.all ? {} : { active: true };
-
-    // Les trois filtres acceptent plusieurs valeurs : a l'interieur d'un meme
-    // filtre les valeurs s'additionnent (OU), entre filtres elles se cumulent
-    // (ET) - c'est le comportement attendu d'une boutique a facettes.
-    if (query.category) {
-      where.category = { OR: [{ name: { in: query.category } }, { slug: { in: query.category } }] };
-    }
-    if (query.material) where.material = { in: query.material };
-    if (query.color) {
-      where.variants = {
-        some: { active: true, OR: [{ colorSlug: { in: query.color } }, { colorName: { in: query.color } }] },
-      };
-    }
-    if (query.minPrice !== undefined || query.maxPrice !== undefined) {
-      where.price = {
-        ...(query.minPrice !== undefined && { gte: query.minPrice }),
-        ...(query.maxPrice !== undefined && { lte: query.maxPrice }),
-      };
-    }
-    if (query.search) {
-      where.OR = [
-        { name: { contains: query.search, mode: "insensitive" } },
-        { description: { contains: query.search, mode: "insensitive" } },
-        { material: { contains: query.search, mode: "insensitive" } },
-        { collection: { contains: query.search, mode: "insensitive" } },
-      ];
-    }
-
-    const skip = (query.page - 1) * query.limit;
-    const [rows, total] = await Promise.all([
-      productRepository.findAll(where, toOrderBy(query.sort), skip, query.limit),
-      productRepository.count(where),
-    ]);
-
-    return {
-      items: rows.map(toDto),
-      meta: {
-        page: query.page,
-        limit: query.limit,
-        total,
-        totalPages: Math.max(1, Math.ceil(total / query.limit)),
-        hasNext: skip + rows.length < total,
-        hasPrev: query.page > 1,
-      },
-    };
+    // La vue back-office (`all`) n'est jamais cachée : elle doit refléter la
+    // dernière écriture immédiatement.
+    if (query.all) return listProducts(query);
+    return catalogCache.remember(catalogKey("products:list", query), () => listProducts(query));
   },
 
   /** Accepte indifféremment l'identifiant ou le slug - pratique pour les URLs. */
@@ -182,19 +192,21 @@ export const productService = {
 
   /** Facettes de filtre calculées depuis la base, jamais codées en dur. */
   async facets() {
-    const [materials, colors, prices] = await Promise.all([
-      productRepository.distinctMaterials(),
-      productRepository.distinctColors(),
-      productRepository.priceBounds(),
-    ]);
-    return {
-      materials: materials.map((m) => m.material),
-      colors: colors.map((c) => ({ name: c.colorName, slug: c.colorSlug, hex: c.hex })),
-      // Bornes reelles du catalogue : le curseur de prix ne doit pas etre code
-      // en dur cote front, sinon il ment des le premier changement de tarif.
-      priceMin: prices._min.price ?? 0,
-      priceMax: prices._max.price ?? 0,
-    };
+    return catalogCache.remember("products:facets", async () => {
+      const [materials, colors, prices] = await Promise.all([
+        productRepository.distinctMaterials(),
+        productRepository.distinctColors(),
+        productRepository.priceBounds(),
+      ]);
+      return {
+        materials: materials.map((m) => m.material),
+        colors: colors.map((c) => ({ name: c.colorName, slug: c.colorSlug, hex: c.hex })),
+        // Bornes reelles du catalogue : le curseur de prix ne doit pas etre code
+        // en dur cote front, sinon il ment des le premier changement de tarif.
+        priceMin: prices._min.price ?? 0,
+        priceMax: prices._max.price ?? 0,
+      };
+    });
   },
 
   async create(input: z.infer<typeof productSchema>) {
@@ -249,6 +261,7 @@ export const productService = {
       },
     });
 
+    catalogCache.invalidate();
     return toDto(product);
   },
 
@@ -264,10 +277,20 @@ export const productService = {
       ...(badge !== undefined ? { badge: badge ? productBadgeMap.fromLabel(badge) : null } : {}),
     };
 
+    // Vidéo remplacée ou retirée : l'ancien fichier n'est plus référencé nulle
+    // part, il faut le retirer du stockage.
+    const orphans: { url?: string | null; kind: "image" | "video" }[] = [];
+    if (input.videoUrl !== undefined && existing.videoUrl && existing.videoUrl !== input.videoUrl) {
+      orphans.push({ url: existing.videoUrl, kind: "video" });
+    }
+
     // Sans bloc `variants`, on ne touche qu'à la fiche : c'est le cas courant
     // (changement de prix, de description, activation/désactivation).
     if (!variants) {
-      return toDto(await productRepository.update(id, productData));
+      const product = toDto(await productRepository.update(id, productData));
+      catalogCache.invalidate();
+      enqueueMediaCleanup(orphans);
+      return product;
     }
 
     // Avec `variants` : la liste reçue EST l'état voulu. Les coloris existants
@@ -290,14 +313,52 @@ export const productService = {
       })),
     });
 
+    // Photos disparues de la galerie : présentes avant, absentes après ET pas
+    // conservées sur un coloris archivé (dont les lignes `ProductImage` restent).
+    const keptAfter = new Set([
+      ...product.variants.flatMap((v) => v.images.map((i) => i.url)),
+      ...existing.variants
+        .filter((v) => archiveIds.includes(v.id))
+        .flatMap((v) => v.images.map((i) => i.url)),
+    ]);
+    for (const { url } of existing.variants.flatMap((v) => v.images)) {
+      if (!keptAfter.has(url)) orphans.push({ url, kind: "image" });
+    }
+
+    catalogCache.invalidate();
+    enqueueMediaCleanup(orphans);
     return toDto(product);
   },
 
   async remove(id: string) {
     const existing = await productRepository.findById(id);
     if (!existing) throw AppError.notFound("Produit introuvable.");
-    // Désactivation plutôt que suppression : les commandes passées référencent
-    // ce produit, un DELETE casserait l'historique.
-    await productRepository.update(id, { active: false });
+
+    // Un produit déjà commandé ne peut pas être supprimé : les lignes de
+    // commande y font référence et l'historique doit rester lisible. On le
+    // refuse explicitement, en orientant vers l'archivage (bouton « Archiver »,
+    // qui pose active: false).
+    const orderedCount = await productRepository.countOrderItems(id);
+    if (orderedCount > 0) {
+      throw AppError.conflict(
+        "Ce produit figure dans des commandes : archivez-le plutôt que de le supprimer. Il sera masqué de la boutique et l'historique restera intact.",
+      );
+    }
+
+    // Toutes les URL, coloris archivés compris, relevées AVANT la suppression :
+    // après, les lignes `ProductImage` n'existent plus.
+    const imageUrls = await productRepository.listImageUrls(id);
+
+    // Aucune commande ne le référence : suppression définitive. Coloris, photos,
+    // stock, mouvements de stock et favoris partent en cascade (voir schema.prisma).
+    await productRepository.remove(id);
+    catalogCache.invalidate();
+
+    // Les fichiers Cloudinary, eux, ne partent pas en cascade : la file de
+    // tâches les retire une fois la suppression SQL actée.
+    enqueueMediaCleanup([
+      ...imageUrls.map((row) => ({ url: row.url, kind: "image" as const })),
+      { url: existing.videoUrl, kind: "video" as const },
+    ]);
   },
 };

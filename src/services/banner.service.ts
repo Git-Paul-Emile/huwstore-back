@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { bannerRepository, type BannerWithLink } from "../repositories/banner.repository.js";
 import { categoryRepository } from "../repositories/category.repository.js";
 import { productRepository } from "../repositories/product.repository.js";
+import { enqueueMediaCleanup } from "../queue/index.js";
 import { AppError } from "../utils/AppError.js";
 import { bannerLinkTypeMap, bannerSlotMap, bannerTargetMap } from "../utils/enumMaps.js";
 import type { bannerSchema, bannerUpdateSchema, bannerListQuerySchema } from "../validators/banner.validator.js";
@@ -206,6 +207,11 @@ export const bannerService = {
       ...(target ? { target: bannerTargetMap.fromLabel(target) } : {}),
       ...(linkData ? linkRelations(linkData) : {}),
     });
+
+    // Visuel de campagne remplacé : l'ancien fichier devient orphelin.
+    if (rest.image && rest.image !== existing.image) {
+      enqueueMediaCleanup([{ url: existing.image }]);
+    }
     return toDto(banner);
   },
 
@@ -213,5 +219,6 @@ export const bannerService = {
     const existing = await bannerRepository.findById(id);
     if (!existing) throw AppError.notFound("Bannière introuvable.");
     await bannerRepository.remove(id);
+    enqueueMediaCleanup([{ url: existing.image }]);
   },
 };

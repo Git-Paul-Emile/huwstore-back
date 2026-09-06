@@ -2,12 +2,13 @@ import { Router } from "express";
 import { categoryController } from "../controller/category.controller.js";
 import { validateId } from "../middlewares/validateId.js";
 import { validate } from "../middlewares/validate.js";
+import { publicCache } from "../middlewares/httpCache.js";
 import { categorySchema, categoryUpdateSchema } from "../validators/category.validator.js";
 import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 
 export const categoryRoutes = Router();
 
-categoryRoutes.get("/", categoryController.list);
+categoryRoutes.get("/", publicCache(120, 600), categoryController.list);
 categoryRoutes.post("/", requireAuth, requireAdmin, validate({ body: categorySchema }), categoryController.create);
 categoryRoutes.patch(
   "/:id",

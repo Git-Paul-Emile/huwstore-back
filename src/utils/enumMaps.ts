@@ -78,3 +78,9 @@ export const stockMoveTypeMap = createEnumMap([
   ["AJUSTEMENT", "Ajustement"],
   ["VENTE", "Vente"],
 ] as const);
+
+/** Listes de valeurs proposees a la saisie d'un produit (matiere, fermeture). */
+export const productOptionKindMap = createEnumMap([
+  ["MATIERE", "matiere"],
+  ["FERMETURE", "fermeture"],
+] as const);

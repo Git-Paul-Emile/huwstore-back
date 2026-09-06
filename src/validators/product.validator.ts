@@ -11,7 +11,10 @@ export const variantSchema = z.object({
   colorSlug: z.string().regex(slugPattern, "Slug invalide (minuscules, chiffres et tirets)."),
   hex: z.string().regex(hexPattern, "Couleur hexadécimale attendue, ex. #1a1a1a."),
   hexSecondary: z.string().regex(hexPattern).optional(),
-  images: z.array(z.string().min(1)).default([]),
+  // Une fiche sans visuel s'affiche en boutique avec une vignette vide : la
+  // photo est une donnée obligatoire du catalogue, revalidée ici et pas
+  // seulement dans le formulaire.
+  images: z.array(z.string().min(1)).min(1, "Ajoutez au moins une photo à ce coloris."),
   stockQty: z.number().int().nonnegative().default(0),
   stockThreshold: z.number().int().nonnegative().default(5),
 });
@@ -28,7 +31,7 @@ export const variantUpdateSchema = z.object({
   colorSlug: z.string().regex(slugPattern, "Slug invalide (minuscules, chiffres et tirets)."),
   hex: z.string().regex(hexPattern, "Couleur hexadécimale attendue, ex. #1a1a1a."),
   hexSecondary: z.string().regex(hexPattern).optional(),
-  images: z.array(z.string().min(1)).default([]),
+  images: z.array(z.string().min(1)).min(1, "Ajoutez au moins une photo à ce coloris."),
   stockThreshold: z.number().int().nonnegative().default(5),
 });
 

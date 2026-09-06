@@ -2,12 +2,13 @@ import { Router } from "express";
 import { testimonialController } from "../controller/testimonial.controller.js";
 import { validateId } from "../middlewares/validateId.js";
 import { validate } from "../middlewares/validate.js";
+import { publicCache } from "../middlewares/httpCache.js";
 import { testimonialSchema, testimonialUpdateSchema } from "../validators/testimonial.validator.js";
 import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 
 export const testimonialRoutes = Router();
 
-testimonialRoutes.get("/", testimonialController.list);
+testimonialRoutes.get("/", publicCache(300, 3600), testimonialController.list);
 testimonialRoutes.post(
   "/",
   requireAuth,
