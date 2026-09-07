@@ -36,4 +36,14 @@ describe("publicCache", () => {
     const { headers } = run({ headers: {}, query: { all: "true" } });
     assert.equal(headers["cache-control"], "no-store");
   });
+
+  it("refuse le cache dès qu'un cookie de session est présent", () => {
+    const { headers } = run({ headers: { cookie: "mw-refresh-token=abc; autre=1" }, query: {} });
+    assert.equal(headers["cache-control"], "no-store");
+  });
+
+  it("met en cache si le navigateur n'a que des cookies sans rapport", () => {
+    const { headers } = run({ headers: { cookie: "theme=dark" }, query: {} });
+    assert.equal(headers["cache-control"], "public, max-age=60, stale-while-revalidate=600");
+  });
 });

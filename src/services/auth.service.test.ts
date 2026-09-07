@@ -36,14 +36,32 @@ describe("authService.refresh", () => {
     assert.ok(session.accessToken && session.refreshToken);
   });
 
-  it("détecte la réutilisation : un jeton déjà révoqué invalide toute la famille", async () => {
+  it("détecte la réutilisation : un jeton révoqué depuis longtemps invalide toute la famille", async () => {
     const token = signRefreshToken({ userId: USER.id, role: "CLIENT" });
-    mock.method(refreshTokenRepository, "findByHash", async () => storedRow({ revokedAt: new Date() }));
+    // Révoqué il y a une minute : hors de la fenêtre de grâce, profil d'un vol.
+    mock.method(refreshTokenRepository, "findByHash", async () =>
+      storedRow({ revokedAt: new Date(Date.now() - 60_000) }),
+    );
     const revokeFamily = mock.method(refreshTokenRepository, "revokeFamily", async () => ({ count: 3 }));
 
     await assert.rejects(() => authService.refresh(token), /sécurité/);
     assert.equal(revokeFamily.mock.callCount(), 1);
     assert.equal(revokeFamily.mock.calls[0].arguments[0], "fam-1");
+  });
+
+  it("tolère un jeton re-présenté juste après sa rotation : ré-émet sans invalider la famille", async () => {
+    const token = signRefreshToken({ userId: USER.id, role: "CLIENT" });
+    // Révoqué à l'instant : deux onglets, un rechargement - une course, pas un vol.
+    mock.method(refreshTokenRepository, "findByHash", async () => storedRow({ revokedAt: new Date() }));
+    const revokeFamily = mock.method(refreshTokenRepository, "revokeFamily", async () => ({ count: 0 }));
+    const create = mock.method(refreshTokenRepository, "create", async () => storedRow());
+    mock.method(userRepository, "findById", async () => USER);
+
+    const session = await authService.refresh(token);
+
+    assert.equal(revokeFamily.mock.callCount(), 0);
+    assert.equal(create.mock.calls[0].arguments[0].family, "fam-1");
+    assert.ok(session.accessToken && session.refreshToken);
   });
 
   it("refuse un jeton inconnu en base", async () => {

@@ -19,6 +19,18 @@ const BCRYPT_ROUNDS = 12;
 /** Durée de vie du jeton de rafraîchissement, alignée sur `signRefreshToken` (30 jours). */
 const REFRESH_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * Fenêtre de grâce après la rotation d'un jeton.
+ *
+ * Un navigateur ne renvoie pas toujours le tout dernier cookie : deux onglets,
+ * un rechargement, un retry réseau peuvent re-présenter le jeton d'AVANT la
+ * rotation, quelques secondes après. Ce n'est pas un vol, c'est une course. On
+ * ne détruit donc la famille (et on ne déconnecte partout) que si le rejeu est
+ * plus tardif : un jeton volé est stocké puis rejoué bien après, pas dans la
+ * seconde. Dans la fenêtre, on ré-émet une session normale.
+ */
+const ROTATION_GRACE_MS = 20_000;
+
 /** SHA-256 : la table ne stocke jamais le jeton en clair, seulement son empreinte. */
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
@@ -100,13 +112,21 @@ export const authService = {
       throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
     }
 
-    if (stored.revokedAt) {
-      await refreshTokenRepository.revokeFamily(stored.family);
-      throw AppError.unauthorized("Session invalidée pour raison de sécurité, veuillez vous reconnecter.");
-    }
-
     if (stored.expiresAt.getTime() < Date.now()) {
       throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+    }
+
+    if (stored.revokedAt) {
+      const replayedAfterMs = Date.now() - stored.revokedAt.getTime();
+      if (replayedAfterMs > ROTATION_GRACE_MS) {
+        await refreshTokenRepository.revokeFamily(stored.family);
+        throw AppError.unauthorized("Session invalidée pour raison de sécurité, veuillez vous reconnecter.");
+      }
+      // Course bénigne : on ré-émet sans révoquer la famille ni re-révoquer ce
+      // jeton (il l'est déjà).
+      const graceUser = await userRepository.findById(stored.userId);
+      if (!graceUser) throw AppError.unauthorized("Session expirée, veuillez vous reconnecter.");
+      return issueSession(graceUser, stored.family);
     }
 
     await refreshTokenRepository.revokeById(stored.id);
