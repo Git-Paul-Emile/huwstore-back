@@ -60,7 +60,7 @@ const layout = (shopName: string, title: string, body: string) => `
   <h1 style="font-size:20px;margin:0 0 20px">${title}</h1>
   ${body}
   <p style="margin-top:28px;font-size:12px;color:#8c857a">
-    Paiement à la livraison, en espèces. Aucun paiement en ligne ne vous sera demandé.
+    Sur Dakar, paiement en espèces à la livraison. Dans les autres régions, paiement Wave ou Orange Money hors du site, preuve par WhatsApp. Aucun paiement ne se fait sur ce site.
   </p>
 </div>`;
 
@@ -144,7 +144,7 @@ export const mailService = {
       layout(
         shop.shopName,
         `Merci ${esc(order.client.split(" ")[0])}, votre commande est enregistrée`,
-        `<p style="font-size:14px;line-height:1.6">Nous préparons votre colis. Vous réglerez <strong>${fcfa(order.total)}</strong> en espèces au moment de la livraison.</p>
+        `<p style="font-size:14px;line-height:1.6">Nous préparons votre colis. Montant : <strong>${fcfa(order.total)}</strong>. Sur Dakar, réglez-le en espèces à la remise du colis. Dans les autres régions, confirmez la commande par un paiement Wave ou Orange Money sur le numéro que nous vous communiquons, puis envoyez la preuve par WhatsApp : le colis part une fois le paiement confirmé.</p>
          ${deliveryBlock(order)}${lineTable(order)}${follow}`,
       ),
     );

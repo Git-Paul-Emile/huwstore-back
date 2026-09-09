@@ -65,7 +65,7 @@ export const openApiDocument = {
     version: "1.0.0",
     description:
       "API de la boutique HUWSTORE (sacs et maroquinerie, Sénégal).\n\n" +
-      "**Encaissement** : uniquement à la livraison, en espèces. Aucun paiement en ligne.\n\n" +
+      "**Encaissement** : sur Dakar, à la livraison en espèces. Autres régions : paiement Wave ou Orange Money reçu hors du site, qui déclenche l'expédition. Aucun paiement ne transite par l'API (l'enum `PayMethod` reste `COD`, le suivi du paiement mobile est manuel).\n\n" +
       "**Authentification** : jeton d'accès JWT (15 min) transmis en `Authorization: Bearer …`, " +
       "renouvelé par `POST /auth/refresh` grâce au cookie de rafraîchissement `HttpOnly`.\n\n" +
       "**Enveloppe** : toute réponse a la forme `{ status, message, data }`, complétée de `meta` " +

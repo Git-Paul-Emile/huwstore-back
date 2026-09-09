@@ -22,10 +22,11 @@ export const payStatusMap = createEnumMap([
 ] as const);
 
 /**
- * La boutique encaisse a la livraison, en especes, et rien d'autre : pas de
- * paiement en ligne, pas de coordonnees bancaires collectees. L'enum ne porte
- * donc qu'une seule valeur - un moyen de paiement present en base mais jamais
- * ouvert serait une promesse que l'interface finirait par afficher.
+ * Aucun paiement ne transite par l'API. Sur Dakar l'encaissement se fait en
+ * especes a la livraison ; pour les autres regions, la cliente paie d'avance
+ * par Wave ou Orange Money hors du site et la boutique verifie l'encaissement a
+ * la main. L'enum ne porte donc qu'une seule valeur : le paiement mobile n'est
+ * pas un etat suivi ici, seulement une consigne affichee a la cliente.
  */
 export const payMethodMap = createEnumMap([["COD", "Paiement à la livraison"]] as const);
 

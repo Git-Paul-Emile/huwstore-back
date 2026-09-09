@@ -156,7 +156,8 @@ export const invoiceService = {
     doc.text(shop.ninea ? `NINEA ${shop.ninea}` : "TVA non applicable.", MARGIN, y, { size: 8.5, color: GREY });
     y += 14;
     doc.paragraph(
-      "Aucun paiement en ligne n'est demandé : le règlement se fait en espèces à la remise du colis. " +
+      "Aucun paiement ne se fait sur le site. Sur Dakar, le règlement se fait en espèces à la remise du colis ; " +
+        "dans les autres régions, par Wave ou Orange Money hors du site avant expédition. " +
         "Les articles ne sont ni repris ni échangés.",
       MARGIN,
       y,

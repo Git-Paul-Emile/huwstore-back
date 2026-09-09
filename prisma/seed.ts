@@ -29,15 +29,17 @@ const prisma = new PrismaClient();
 
 /**
  * Zones de livraison. Le recueil de besoins est explicite : la boutique livre
- * « tout le Sénégal » (Q24, Q36). Dakar est livré en 24 h, hors dimanche ; les
- * délais des autres zones sont ceux annoncés au panier. Délais, frais et seuil
- * de gratuité se règlent ensuite depuis le back-office.
+ * « tout le Sénégal » (Q24, Q36). Dakar est livré en moins de 24 h, hors
+ * dimanche, avec paiement en espèces à la livraison ; les autres régions sont
+ * livrées sous 72 h ouvrées après un paiement Wave ou Orange Money reçu hors du
+ * site. Délais, frais et seuil de gratuité se règlent ensuite depuis le
+ * back-office.
  */
 const deliveryZones = [
   { city: "Dakar", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: true, active: true },
   { city: "Pikine", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: true, active: true },
   { city: "Guédiawaye", country: "Sénégal", fee: 2000, freeFrom: 75000, delay: "24 h", relay: false, active: true },
-  { city: "Rufisque", country: "Sénégal", fee: 2500, freeFrom: 75000, delay: "24 – 48 h", relay: false, active: true },
+  { city: "Rufisque", country: "Sénégal", fee: 2500, freeFrom: 75000, delay: "24 - 48 h", relay: false, active: true },
   { city: "Thiès", country: "Sénégal", fee: 3000, freeFrom: 90000, delay: "72 h", relay: true, active: true },
   { city: "Mbour / Saly", country: "Sénégal", fee: 3000, freeFrom: 90000, delay: "72 h", relay: false, active: true },
   { city: "Touba", country: "Sénégal", fee: 3500, freeFrom: 90000, delay: "72 h", relay: false, active: true },
@@ -313,7 +315,7 @@ async function seedBackOffice() {
       email: process.env.SHOP_ADMIN_EMAIL ?? null,
       city: "Dakar",
       country: "Sénégal",
-      announcement: "Livraison 24 h sur Dakar sauf le dimanche · Paiement à la livraison",
+      announcement: "24 h sur Dakar sauf le dimanche, 72 h en région - paiement espèces sur Dakar, Wave ou Orange Money ailleurs",
     },
   });
 
