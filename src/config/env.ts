@@ -32,6 +32,13 @@ const schema = z
     CLIENT_URL: z.string().default("http://localhost:5173"),
     SITE_URL: z.string().default("http://localhost:5173"),
 
+    // Domaine partagé des cookies de session, ex. ".huwstore.com". À renseigner
+    // quand l'API vit sur un sous-domaine du site (api.huwstore.com) : les
+    // cookies deviennent "same-site", ce qui les fait survivre au rechargement
+    // même avec les cookies tiers bloqués. Absent : cookies liés au seul domaine
+    // de l'API, en SameSite=None (montage front et API sur deux domaines).
+    COOKIE_DOMAIN: z.string().optional(),
+
     // Services externes optionnels. Absents, l'application démarre en mode
     // dégradé documenté (rules/external-services.md) ; elle ne refuse pas de
     // booter, mais le repli est explicite dans chaque adaptateur.

@@ -149,6 +149,7 @@ récupéré depuis `User`), puis passe les colonnes en `NOT NULL`.
 | `SHOP_ADMIN_EMAIL` | Destinataire des notifications de commande. Sans elle, aucune notification n'est envoyée (un avertissement est journalisé). |
 | `SITE_URL` | URL publique, utilisée dans les liens des e-mails. |
 | `RESEND_FROM_EMAIL` | Expéditeur des e-mails. En production, une adresse d'un domaine vérifié Resend est obligatoire (le boot est refusé si elle reste sur `resend.dev`). Format recommandé : `Nom <adresse@domaine>`. |
+| `COOKIE_DOMAIN` | Domaine partagé des cookies de session, ex. `.huwstore.com`. À renseigner quand l'API est sur un sous-domaine du site : les cookies passent en `SameSite=Lax` et la session survit au rechargement même avec les cookies tiers bloqués. Vide : `SameSite=None` (front et API sur deux domaines). |
 
 `RESEND_API_KEY` était déjà présente mais n'était utilisée nulle part : elle
 sert désormais réellement. Les e-mails partent avec une partie texte brut et un

@@ -1,5 +1,5 @@
 import type { CookieOptions } from "express";
-import { isProduction } from "./env.js";
+import { env, isProduction } from "./env.js";
 
 /**
  * Cookies de session.
@@ -9,10 +9,16 @@ import { isProduction } from "./env.js";
  * session de 30 jours. Le jeton d'accès, lui, ne dure que 15 minutes et reste
  * en mémoire du navigateur (jamais dans localStorage).
  *
- * En production, le front (Vercel) et l'API (Render) sont sur deux domaines :
- * le cookie doit donc être `SameSite=None; Secure`, sinon le navigateur ne
- * l'envoie tout simplement pas. En développement, tout est sur localhost et
- * `Lax` suffit - `None` sans HTTPS serait rejeté par le navigateur.
+ * Deux montages possibles en production :
+ *  - front et API sur deux domaines distincts (Vercel + Render) : le cookie
+ *    doit être `SameSite=None; Secure`, et les navigateurs qui bloquent les
+ *    cookies tiers le perdent malgré tout au rechargement ;
+ *  - API sur un sous-domaine du site (`api.huwstore.com`) : renseigner
+ *    `COOKIE_DOMAIN=.huwstore.com`, le cookie devient "same-site", `Lax` suffit
+ *    et il survit au rechargement partout.
+ *
+ * En développement tout est sur localhost : `Lax` suffit, `None` sans HTTPS
+ * serait rejeté par le navigateur.
  */
 export const REFRESH_COOKIE = "mw-refresh-token";
 export const CSRF_COOKIE = "mw-csrf";
@@ -20,12 +26,24 @@ export const CSRF_HEADER = "x-csrf-token";
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-export const refreshCookieOptions: CookieOptions = {
-  httpOnly: true,
+const cookieDomain = env.COOKIE_DOMAIN?.trim() || undefined;
+
+/**
+ * Base commune aux deux cookies. `sameSite` : `Lax` dès qu'un domaine partagé
+ * est configuré (API en sous-domaine, donc same-site), `None` sinon en
+ * production (domaines distincts), `Lax` en développement.
+ */
+const baseOptions: CookieOptions = {
   secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
+  sameSite: cookieDomain ? "lax" : isProduction ? "none" : "lax",
+  ...(cookieDomain ? { domain: cookieDomain } : {}),
   path: "/",
   maxAge: THIRTY_DAYS_MS,
+};
+
+export const refreshCookieOptions: CookieOptions = {
+  httpOnly: true,
+  ...baseOptions,
 };
 
 /**
@@ -37,8 +55,5 @@ export const refreshCookieOptions: CookieOptions = {
  */
 export const csrfCookieOptions: CookieOptions = {
   httpOnly: false,
-  secure: isProduction,
-  sameSite: isProduction ? "none" : "lax",
-  path: "/",
-  maxAge: THIRTY_DAYS_MS,
+  ...baseOptions,
 };

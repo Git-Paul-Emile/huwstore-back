@@ -45,7 +45,7 @@ export type OrderMailPayload = {
   city: string;
   country: string;
   deliveryMode: string;
-  items: { name: string; color?: string | null; qty: number; price: number }[];
+  items: { name: string; color?: string | null; qty: number; price: number; image?: string | null }[];
   subtotal: number;
   shippingFee: number;
   discount: number;
@@ -64,13 +64,24 @@ const layout = (shopName: string, title: string, body: string) => `
   </p>
 </div>`;
 
+const itemCell = (item: OrderMailPayload["items"][number]) => {
+  const label = `${esc(item.name)}${item.color ? ` - ${esc(item.color)}` : ""} × ${item.qty}`;
+  if (!item.image) return label;
+  // Vignette : table interne pour l'alignement, seule mise en page fiable en
+  // e-mail. Dimensions en attributs, exigées par plusieurs clients.
+  return `<table role="presentation" style="border-collapse:collapse"><tr>
+    <td style="padding-right:10px;width:44px"><img src="${esc(item.image)}" width="44" height="56" alt="" style="display:block;border-radius:3px;object-fit:cover"></td>
+    <td style="font-size:14px">${label}</td>
+  </tr></table>`;
+};
+
 const lineTable = (order: OrderMailPayload) => `
 <table style="width:100%;border-collapse:collapse;font-size:14px">
   ${order.items
     .map(
       (item) => `<tr>
-    <td style="padding:6px 0;border-bottom:1px solid #eee">${esc(item.name)}${item.color ? ` - ${esc(item.color)}` : ""} × ${item.qty}</td>
-    <td style="padding:6px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">${fcfa(item.price * item.qty)}</td>
+    <td style="padding:8px 0;border-bottom:1px solid #eee">${itemCell(item)}</td>
+    <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right;white-space:nowrap">${fcfa(item.price * item.qty)}</td>
   </tr>`,
     )
     .join("")}
