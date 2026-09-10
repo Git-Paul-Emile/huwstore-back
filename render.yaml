@@ -4,7 +4,10 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    buildCommand: npm install && npx prisma migrate deploy && npm run build
+    # --include=dev force l'installation des devDependencies : NODE_ENV=production
+    # (défini plus bas, actif aussi pendant le build) les exclurait sinon, et
+    # tsc plus @types/* en dépendent pour compiler.
+    buildCommand: npm ci --include=dev && npx prisma migrate deploy && npm run build
     startCommand: npm start
     healthCheckPath: /health
     envVars:
