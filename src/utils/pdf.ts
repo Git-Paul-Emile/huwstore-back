@@ -49,6 +49,44 @@ const WIDTHS_BOLD = [
 export type PdfFont = "regular" | "bold";
 export type PdfAlign = "left" | "right" | "center";
 
+type JpegMeta = { width: number; height: number; colorSpace: "DeviceGray" | "DeviceRGB" | "DeviceCMYK" };
+
+/**
+ * Lit la taille et l'espace colorimétrique d'un JPEG dans son en-tête.
+ *
+ * Le PDF sait décoder le JPEG nativement (filtre `DCTDecode`) : on embarque les
+ * octets tels quels, il suffit d'annoncer les bonnes dimensions. On parcourt les
+ * segments jusqu'au marqueur SOF (début de trame), seul à porter largeur,
+ * hauteur et nombre de composantes.
+ */
+function readJpegMeta(jpeg: Buffer): JpegMeta {
+  if (jpeg[0] !== 0xff || jpeg[1] !== 0xd8) throw new Error("Image attendue au format JPEG.");
+  let offset = 2;
+  while (offset + 9 < jpeg.length) {
+    if (jpeg[offset] !== 0xff) {
+      offset += 1;
+      continue;
+    }
+    const marker = jpeg[offset + 1];
+    const isFrameHeader = marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+    if (isFrameHeader) {
+      const components = jpeg[offset + 9];
+      return {
+        height: jpeg.readUInt16BE(offset + 5),
+        width: jpeg.readUInt16BE(offset + 7),
+        colorSpace: components === 1 ? "DeviceGray" : components === 4 ? "DeviceCMYK" : "DeviceRGB",
+      };
+    }
+    // Marqueurs sans charge utile (RSTn, SOI, EOI, TEM) : on avance de 2 octets.
+    if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) {
+      offset += 2;
+      continue;
+    }
+    offset += 2 + jpeg.readUInt16BE(offset + 2);
+  }
+  throw new Error("En-tête JPEG illisible : marqueur SOF introuvable.");
+}
+
 /** Couleur RVB exprimée de 0 à 1, comme l'attend l'opérateur PDF `rg`. */
 export type PdfColor = [number, number, number];
 
@@ -91,6 +129,7 @@ export type TextOptions = {
  */
 export function createPdfDocument() {
   const operations: string[] = [];
+  const images: { name: string; data: Buffer; meta: JpegMeta }[] = [];
 
   const api = {
     width: PAGE_WIDTH,
@@ -130,6 +169,27 @@ export function createPdfDocument() {
     },
 
     /**
+     * Place une image JPEG. `x`, `y` visent le COIN SUPÉRIEUR gauche, comme le
+     * texte. Donner `width` ou `height` (ou les deux) ; la dimension absente
+     * suit le ratio d'origine.
+     */
+    image(jpeg: Buffer, x: number, y: number, options: { width?: number; height?: number }) {
+      if (!options.width && !options.height) throw new Error("image() : préciser width ou height.");
+      const meta = readJpegMeta(jpeg);
+      const w = options.width ?? (options.height! * meta.width) / meta.height;
+      const h = options.height ?? (options.width! * meta.height) / meta.width;
+      const name = `Im${images.length + 1}`;
+      images.push({ name, data: jpeg, meta });
+      operations.push(
+        "q",
+        `${w.toFixed(2)} 0 0 ${h.toFixed(2)} ${x.toFixed(2)} ${(PAGE_HEIGHT - y - h).toFixed(2)} cm`,
+        `/${name} Do`,
+        "Q",
+      );
+      return api;
+    },
+
+    /**
      * Écrit un paragraphe en coupant aux espaces. Renvoie l'ordonnée juste
      * sous la dernière ligne, pour enchaîner le bloc suivant.
      */
@@ -160,14 +220,27 @@ export function createPdfDocument() {
     build(): Buffer {
       const content = Buffer.from(operations.join("\n"), "latin1");
 
+      // Objets fixes : catalogue, pages, page, contenu, F1, F2. Les images
+      // viennent ensuite, numérotées à la suite.
+      const FIXED_OBJECTS = 6;
+      const xobjects = images.length
+        ? ` /XObject << ${images.map((img, i) => `/${img.name} ${FIXED_OBJECTS + i + 1} 0 R`).join(" ")} >>`
+        : "";
+
       const objects = [
         "<< /Type /Catalog /Pages 2 0 R >>",
         "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
         `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_WIDTH} ${PAGE_HEIGHT}] ` +
-          "/Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>",
+          `/Resources << /Font << /F1 5 0 R /F2 6 0 R >>${xobjects} >> /Contents 4 0 R >>`,
         `<< /Length ${content.length} >>\nstream\n${content.toString("latin1")}\nendstream`,
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
         "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+        ...images.map(
+          (img) =>
+            `<< /Type /XObject /Subtype /Image /Width ${img.meta.width} /Height ${img.meta.height} ` +
+            `/ColorSpace /${img.meta.colorSpace} /BitsPerComponent 8 /Filter /DCTDecode /Length ${img.data.length} >>\n` +
+            `stream\n${img.data.toString("latin1")}\nendstream`,
+        ),
       ];
 
       let pdf = "%PDF-1.4\n";

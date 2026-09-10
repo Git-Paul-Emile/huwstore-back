@@ -13,6 +13,16 @@ export type MailMessage = {
   to: string;
   subject: string;
   html: string;
+  /**
+   * Version texte brut. Toujours la fournir : les clients en mode texte
+   * l'affichent, et son absence dégrade le score anti-spam du message.
+   */
+  text?: string;
+  /**
+   * Adresse à laquelle arrive une réponse du destinataire. Sur la confirmation
+   * cliente, c'est la boutique ; sur la notification boutique, c'est la cliente.
+   */
+  replyTo?: string;
 };
 
 export interface Mailer {

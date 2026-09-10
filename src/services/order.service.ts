@@ -28,6 +28,7 @@ const toDto = (order: OrderWithItems) => ({
     color: item.color ?? undefined,
     qty: item.qty,
     price: item.price,
+    image: item.variant?.images[0]?.url ?? item.product.images[0]?.url ?? undefined,
   })),
   subtotal: order.subtotal,
   shippingFee: order.shippingFee,
@@ -191,9 +192,15 @@ export const orderService = {
     const existing = await orderRepository.findById(id);
     if (!existing) throw AppError.notFound("Commande introuvable.");
 
+    // Une commande livrée a forcément été encaissée : sur Dakar à la remise du
+    // colis, ailleurs par le paiement Wave ou Orange Money vérifié avant envoi.
+    // On solde donc le paiement en même temps que le passage à « Livrée », sans
+    // exiger un second clic sur le back-office.
+    const settleOnDelivery = input.status === "Livrée" && existing.pay !== "PAYE";
+
     const order = await orderRepository.update(id, {
       ...(input.status ? { status: orderStatusMap.fromLabel(input.status) } : {}),
-      ...(input.pay ? { pay: payStatusMap.fromLabel(input.pay) } : {}),
+      ...(input.pay ? { pay: payStatusMap.fromLabel(input.pay) } : settleOnDelivery ? { pay: "PAYE" } : {}),
       ...(input.courier !== undefined ? { courier: input.courier } : {}),
       ...(input.tracking !== undefined ? { tracking: input.tracking } : {}),
     });

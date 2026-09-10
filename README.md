@@ -144,13 +144,16 @@ récupéré depuis `User`), puis passe les colonnes en `NOT NULL`.
 
 ### Nouvelles variables d'environnement
 
-| Variable           | Rôle                                                                                                                        |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Variable | Rôle |
+| --- | --- |
 | `SHOP_ADMIN_EMAIL` | Destinataire des notifications de commande. Sans elle, aucune notification n'est envoyée (un avertissement est journalisé). |
-| `SITE_URL`         | URL publique, utilisée dans les liens des e-mails.                                                                          |
+| `SITE_URL` | URL publique, utilisée dans les liens des e-mails. |
+| `RESEND_FROM_EMAIL` | Expéditeur des e-mails. En production, une adresse d'un domaine vérifié Resend est obligatoire (le boot est refusé si elle reste sur `resend.dev`). Format recommandé : `Nom <adresse@domaine>`. |
 
 `RESEND_API_KEY` était déjà présente mais n'était utilisée nulle part : elle
-sert désormais réellement.
+sert désormais réellement. Les e-mails partent avec une partie texte brut et un
+`Reply-To` (la boutique sur la confirmation cliente, la cliente sur la
+notification boutique).
 
 ### Nouvelles routes
 

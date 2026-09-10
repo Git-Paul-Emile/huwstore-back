@@ -1,7 +1,14 @@
 import { prisma, TX_OPTIONS } from "../config/database.js";
 import type { Prisma } from "@prisma/client";
 
-const include = { items: true } satisfies Prisma.OrderInclude;
+// L'image n'est pas figee sur la ligne de commande : le back-office affiche le
+// visuel actuel du catalogue pour reconnaitre le sac. On prend d'abord l'image
+// propre a la declinaison commandee, puis a defaut la premiere image du produit.
+const primaryImage = { images: { orderBy: { position: "asc" }, take: 1, select: { url: true } } } as const;
+
+const include = {
+  items: { include: { variant: { select: primaryImage }, product: { select: primaryImage } } },
+} satisfies Prisma.OrderInclude;
 
 export const orderRepository = {
   findAll: (where: Prisma.OrderWhereInput, orderBy: Prisma.OrderOrderByWithRelationInput, skip: number, take: number) =>

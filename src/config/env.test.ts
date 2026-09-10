@@ -47,4 +47,29 @@ describe("parseEnv", () => {
     });
     assert.equal(result.ok, true);
   });
+
+  it("refuse en production un expéditeur Resend resté sur le domaine de test", () => {
+    const result = parseEnv({
+      ...base,
+      NODE_ENV: "production",
+      CLIENT_URL: "https://huwstore.com",
+      SITE_URL: "https://huwstore.com",
+      RESEND_API_KEY: "re_test",
+      RESEND_FROM_EMAIL: "onboarding@resend.dev",
+    });
+    assert.equal(result.ok, false);
+    if (!result.ok) assert.match(result.message, /RESEND_FROM_EMAIL/);
+  });
+
+  it("accepte en production un expéditeur Resend sur le domaine vérifié", () => {
+    const result = parseEnv({
+      ...base,
+      NODE_ENV: "production",
+      CLIENT_URL: "https://huwstore.com",
+      SITE_URL: "https://huwstore.com",
+      RESEND_API_KEY: "re_test",
+      RESEND_FROM_EMAIL: "HUWSTORE <commandes@huwstore.com>",
+    });
+    assert.equal(result.ok, true);
+  });
 });

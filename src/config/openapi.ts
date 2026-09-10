@@ -715,6 +715,7 @@ export const openApiDocument = {
           color: { type: "string" },
           qty: { type: "integer" },
           price: { type: "integer" },
+          image: { type: "string", description: "Visuel actuel du catalogue, absent si l'article n'a plus d'image." },
         },
       },
       Order: {

@@ -1,4 +1,5 @@
 import { createPdfDocument, type PdfColor } from "../utils/pdf.js";
+import { receiptLogo } from "../assets/logo.js";
 import type { OrderDto } from "./order.service.js";
 import type { SettingDto } from "./setting.service.js";
 
@@ -45,8 +46,17 @@ export const invoiceService = {
 
     // ---- En-tête -----------------------------------------------------------
     doc.rect(0, 0, doc.width, 4, GOLD);
-    doc.text(shop.shopName.toUpperCase(), MARGIN, 70, { size: 18, font: "bold", color: INK });
-    doc.text("Maroquinerie", MARGIN, 86, { size: 8.5, color: GOLD });
+
+    // Le logo remplace le nom en capitales quand il est fourni ; sinon on garde
+    // le traitement typographique, le reçu ne dépend jamais d'un fichier absent.
+    const logo = receiptLogo();
+    if (logo) {
+      doc.image(logo, MARGIN, 52, { height: 34 });
+      doc.text("Maroquinerie", MARGIN, 96, { size: 8.5, color: GOLD });
+    } else {
+      doc.text(shop.shopName.toUpperCase(), MARGIN, 70, { size: 18, font: "bold", color: INK });
+      doc.text("Maroquinerie", MARGIN, 86, { size: 8.5, color: GOLD });
+    }
 
     doc.text("FACTURE", MARGIN, 70, { size: 18, font: "bold", color: INK, align: "right", width: contentWidth });
     doc.text(invoiceNumber(order.id), MARGIN, 86, { size: 9, color: GREY, align: "right", width: contentWidth });

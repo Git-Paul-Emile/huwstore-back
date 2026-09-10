@@ -40,7 +40,13 @@ export const orderController = {
    */
   invoice: controllerWrapper(async (req, res) => {
     if (!req.user) throw AppError.unauthorized();
-    const order = await orderService.getOwnedOrder(getParam(req, "id"), req.user.userId);
+    // Le back-office imprime le reçu de n'importe quelle commande ; la cliente,
+    // seulement le sien.
+    const id = getParam(req, "id");
+    const order =
+      req.user.role === "ADMIN"
+        ? await orderService.getById(id)
+        : await orderService.getOwnedOrder(id, req.user.userId);
     const shop = await settingService.get();
     const pdf = invoiceService.build(order, shop);
 

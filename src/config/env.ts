@@ -51,6 +51,17 @@ const schema = z
         ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: "requise en production" });
       }
     }
+    // Resend configuré mais expéditeur resté sur le domaine bac à sable : chaque
+    // envoi vers un tiers échouerait en 403 « resend.dev is for testing ». On
+    // refuse le boot plutôt que de laisser les e-mails de commande partir dans
+    // le vide.
+    if (value.RESEND_API_KEY && value.RESEND_FROM_EMAIL.includes("resend.dev")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["RESEND_FROM_EMAIL"],
+        message: 'doit être une adresse de votre domaine vérifié, ex. "HUWSTORE <commandes@huwstore.com>"',
+      });
+    }
   });
 
 export type Env = z.infer<typeof schema>;
