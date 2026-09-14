@@ -139,11 +139,18 @@ export const authService = {
     return issueSession(user, stored.family);
   },
 
-  /** Déconnexion : révoque toute la famille du jeton présenté. Idempotent. */
+  /**
+   * Déconnexion : révoque ET expire toute la famille du jeton présenté.
+   * Idempotent.
+   *
+   * `expireFamily`, pas `revokeFamily` : la fenêtre de grâce de `refresh`
+   * (voir plus haut) ne doit jamais rouvrir une session qu'on vient de
+   * fermer volontairement, y compris quelques secondes après le clic.
+   */
   async logout(rawToken: string | undefined) {
     if (!rawToken) return;
     const stored = await refreshTokenRepository.findByHash(hashToken(rawToken));
-    if (stored) await refreshTokenRepository.revokeFamily(stored.family);
+    if (stored) await refreshTokenRepository.expireFamily(stored.family);
   },
 
   /**
