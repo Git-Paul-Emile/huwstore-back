@@ -184,7 +184,7 @@ diverger.
 ## Mise a jour du 28 aout 2026 - securite, commande invite, facture
 
 Cette version ferme les ecarts releves face au recueil de besoins et aux regles
-du dossier `rules/`. Elle contient une migration et deux nouvelles variables
+du dossier `.claude/rules/`. Elle contient une migration et deux nouvelles variables
 d'environnement.
 
 ### Ce qui change en base
@@ -213,14 +213,14 @@ La migration :
 
 ### Securite
 
-| Regle (`rules/security.md`) | Mise en oeuvre                                                                                                                           |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Rate limiting               | `middlewares/rateLimit.ts` - 600 requetes / 15 min en general, 10 tentatives de connexion echouees / 15 min, 60 ecritures publiques / h. |
-| En-tetes de securite        | `helmet` dans `config/app.ts`.                                                                                                           |
-| JWT avec refresh token      | `POST /auth/refresh` : le jeton d'acces vit 15 min, le cookie de rafraichissement 30 jours et tourne a chaque appel.                     |
-| Cookies HttpOnly            | Le refresh token n'est jamais lisible par le JavaScript. Le front garde le jeton d'acces **en memoire**, plus dans `localStorage`.       |
-| Protection CSRF             | Double envoi (`mw-csrf` + en-tete `X-CSRF-Token`) sur les seules routes authentifiees par cookie.                                        |
-| Moindre privilege           | Le back-office est garde cote serveur (`requireAdmin`) **et** cote ecran (`RequireAdmin`).                                               |
+| Regle (`.claude/rules/20-qualite/security.md`) | Mise en oeuvre                                                                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Rate limiting                                     | `middlewares/rateLimit.ts` - 600 requetes / 15 min en general, 10 tentatives de connexion echouees / 15 min, 60 ecritures publiques / h. |
+| En-tetes de securite                              | `helmet` dans `config/app.ts`.                                                                                                           |
+| JWT avec refresh token                            | `POST /auth/refresh` : le jeton d'acces vit 15 min, le cookie de rafraichissement 30 jours et tourne a chaque appel.                     |
+| Cookies HttpOnly                                  | Le refresh token n'est jamais lisible par le JavaScript. Le front garde le jeton d'acces **en memoire**, plus dans `localStorage`.       |
+| Protection CSRF                                   | Double envoi (`mw-csrf` + en-tete `X-CSRF-Token`) sur les seules routes authentifiees par cookie.                                        |
+| Moindre privilege                                 | Le back-office est garde cote serveur (`requireAdmin`) **et** cote ecran (`RequireAdmin`).                                               |
 
 ### Observabilite
 
@@ -286,10 +286,10 @@ normalisation des numeros de telephone, generation du CSV et de la facture.
 
 ## Mise à jour du 29 août 2026 — résilience, file de tâches, adaptateurs, SEO
 
-Cette version ferme les derniers écarts face au dossier `rules/` (hors CI/CD). Pas
+Cette version ferme les derniers écarts face au dossier `.claude/rules/` (hors CI/CD). Pas
 de migration, pas de dépendance d'infrastructure nouvelle.
 
-### Services externes derrière un port (`rules/external-services.md`)
+### Services externes derrière un port (`.claude/rules/10-stack/external-services.md`)
 
 Le code métier ne connaît plus ni Resend ni Cloudinary, seulement deux
 interfaces :
@@ -302,13 +302,13 @@ interfaces :
 Changer de fournisseur = un nouvel adaptateur, rien d'autre. `config/resend.ts`
 et `config/cloudinary.ts` restent les seuls fichiers qui importent le SDK.
 
-### Résilience des appels sortants (`rules/async.md`)
+### Résilience des appels sortants (`.claude/rules/10-stack/async.md`)
 
 `lib/resilience.ts` : **timeout** (aucun appel externe ne bloque), **retry** à
 backoff exponentiel + jitter, **circuit breaker** (on cesse d'appeler un
 fournisseur tombé). Façade `resilient()`, utilisée par les adaptateurs.
 
-### File de tâches (`rules/async.md`)
+### File de tâches (`.claude/rules/10-stack/async.md`)
 
 `queue/job-queue.ts` : file en mémoire, concurrence bornée, **jobs idempotents**
 (clé), retry, lettre morte, métriques. Les e-mails de commande y passent
@@ -326,7 +326,7 @@ partagé (`huwstore/univers/`).
 > Ce n'est pas une file durable : un redémarrage perd les jobs en attente.
 > Compromis assumé pour rester sans Redis ; l'API reste mono-instance.
 
-### Performance (`rules/performance.md`)
+### Performance (`.claude/rules/20-qualite/performance.md`)
 
 - `middlewares/compression.ts` : Brotli/gzip des réponses, sans dépendance.
 - `lib/cache.ts` : cache TTL mémoire. Les paramètres boutique sont mis en cache
@@ -342,7 +342,7 @@ partagé (`huwstore/univers/`).
   navigateur sert la copie en cache tout de suite puis rafraîchit derrière.
   `no-store` dès qu'il y a un `Authorization` ou un `?all`.
 
-### Observabilité (`rules/observability.md`)
+### Observabilité (`.claude/rules/20-qualite/observability.md`)
 
 `config/monitoring.ts` : point de collecte unique des exceptions — tout le code
 passe par `monitoring.captureException`, jamais par le SDK directement.
@@ -354,7 +354,7 @@ retirer la variable suffit à le désactiver en local. `monitoring.flush()` est
 appelé avant chaque `process.exit()` pour ne pas perdre les derniers événements.
 `/health` expose l'état de la file, des services externes et du monitoring.
 
-### SEO (`rules/SEO.md`)
+### SEO (`.claude/rules/30-produit/seo.md`)
 
 `GET /sitemap.xml` (route à la racine, hors `/api`) : plan du site généré depuis
 la base — pages stables + chaque fiche produit active avec sa `lastmod`, mis en
