@@ -435,6 +435,9 @@ model Setting {
   instagramUrl String?
   facebookUrl  String?
   tiktokUrl    String?
+  /// Lien du bouton WhatsApp affiche dans les reseaux sociaux du pied de page,
+  /// distinct du numero ci-dessus qui sert au widget de discussion.
+  whatsappUrl  String?
   /// Bandeau libre affiche en haut de la vitrine. Vide = pas de bandeau.
   announcement String?
   updatedAt    DateTime @updatedAt

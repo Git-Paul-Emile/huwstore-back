@@ -25,6 +25,7 @@ const toDto = (setting: SettingRow) => ({
   instagramUrl: setting.instagramUrl ?? undefined,
   facebookUrl: setting.facebookUrl ?? undefined,
   tiktokUrl: setting.tiktokUrl ?? undefined,
+  whatsappUrl: setting.whatsappUrl ?? undefined,
   announcement: setting.announcement ?? undefined,
 });
 

@@ -316,6 +316,10 @@ async function seedBackOffice() {
       city: "Dakar",
       country: "Sénégal",
       announcement: "24 h sur Dakar sauf le dimanche, 72 h en région - paiement espèces sur Dakar, Wave ou Orange Money ailleurs",
+      instagramUrl: "https://www.instagram.com/huw__store?stkn=MWp5aGw0YXI5dzRtYg%3D%3D&utm_source=qr",
+      facebookUrl: "https://www.facebook.com/share/19dEYf9JgQ/?mibextid=wwXIfr",
+      tiktokUrl: "https://www.tiktok.com/@huw.store?_r=1&_t=ZS-99mwNIVpNJv",
+      whatsappUrl: "https://wa.me/message/4BL7YUQLZNECM1",
     },
   });
 

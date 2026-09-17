@@ -40,6 +40,7 @@ export const settingUpdateSchema = z
     instagramUrl: optionalUrl,
     facebookUrl: optionalUrl,
     tiktokUrl: optionalUrl,
+    whatsappUrl: optionalUrl,
     announcement: optionalText(160),
   })
   .strict();
