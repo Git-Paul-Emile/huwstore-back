@@ -533,6 +533,14 @@ export const openApiDocument = {
         responses: { 200: ok("Favoris récupérés.", list("Product")), ...errors },
       },
     },
+    "/cart": {
+      get: {
+        tags: ["Compte client"],
+        summary: "Mon panier",
+        security: adminSecurity,
+        responses: { 200: ok("Panier récupéré.", { type: "array", items: { type: "object" } }), ...errors },
+      },
+    },
   },
 
   components: {

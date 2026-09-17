@@ -172,6 +172,7 @@ model ProductVariant {
   stock      Stock?
   stockMoves StockMovement[]
   orderItems OrderItem[]
+  cartItems  CartItem[]
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
 
@@ -243,6 +244,7 @@ model User {
   orders       Order[]
   addresses    Address[]
   wishlist     WishlistItem[]
+  cartItems    CartItem[]
   refreshTokens RefreshToken[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -357,6 +359,26 @@ model WishlistItem {
   createdAt DateTime @default(now())
 
   @@unique([userId, productId])
+  @@index([userId, createdAt])
+}
+
+/// Panier rattache au compte, et non au navigateur : il suit la cliente d'un
+/// appareil a l'autre, sur le meme principe que WishlistItem. Ne stocke que la
+/// declinaison et la quantite - prix, stock et photos viennent toujours du
+/// catalogue en direct, jamais d'une copie qui pourrait se perimer. Les
+/// visiteurs non connectes gardent un panier local, verse dans le compte a la
+/// connexion (merge).
+model CartItem {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  qty       Int            @default(1)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, variantId])
   @@index([userId, createdAt])
 }
 
