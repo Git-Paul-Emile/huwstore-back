@@ -36,7 +36,7 @@ const order: OrderDto = {
   promoCode: "BIENVENUE10",
   total: 34400,
   pay: "En attente",
-  method: "Paiement à la livraison",
+  method: "Espèces",
   status: "En préparation",
   courier: undefined,
   tracking: undefined,

@@ -8,6 +8,7 @@ const valide = {
   addressLine: "Sacré-Cœur 3, villa 4521",
   city: "Dakar",
   country: "Sénégal",
+  method: "Espèces",
   items: [{ variantId: "v1", qty: 1 }],
 };
 
@@ -15,8 +16,13 @@ describe("orderCreateSchema", () => {
   it("accepte une commande minimale et applique les valeurs par défaut", () => {
     const parsed = orderCreateSchema.parse(valide);
     assert.equal(parsed.deliveryMode, "Domicile");
-    assert.equal(parsed.method, "Paiement à la livraison");
     assert.equal(parsed.phone, "771234567");
+  });
+
+  it("exige un moyen de paiement", () => {
+    const sansMethod: Record<string, unknown> = { ...valide };
+    delete sansMethod.method;
+    assert.throws(() => orderCreateSchema.parse(sansMethod));
   });
 
   it("n'exige pas d'adresse e-mail dans le corps : le compte connecté porte déjà le contact", () => {
@@ -28,9 +34,9 @@ describe("orderCreateSchema", () => {
   });
 
   it("refuse un moyen de paiement non ouvert à la vente", () => {
-    // La boutique encaisse uniquement à la livraison : proposer autre chose
-    // depuis le navigateur ne doit pas passer la validation.
-    assert.throws(() => orderCreateSchema.parse({ ...valide, method: "Wave" }));
+    // Seuls espèces, Wave et Orange Money sont ouverts : un moyen non listé
+    // (carte, virement...) ne doit pas passer la validation.
+    assert.throws(() => orderCreateSchema.parse({ ...valide, method: "Carte bancaire" }));
   });
 
   it("refuse une quantité nulle, négative ou déraisonnable", () => {

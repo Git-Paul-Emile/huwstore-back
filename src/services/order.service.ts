@@ -37,6 +37,7 @@ const toDto = (order: OrderWithItems) => ({
   total: order.total,
   pay: payStatusMap.label(order.pay),
   method: payMethodMap.label(order.method),
+  codEligible: order.codEligible,
   status: orderStatusMap.label(order.status),
   courier: order.courier ?? undefined,
   tracking: order.tracking ?? undefined,
@@ -130,12 +131,23 @@ export const orderService = {
    */
   async create(input: z.infer<typeof orderCreateSchema>, userId: string) {
     // Un seul point de calcul : disponibilite, prix, frais de port et remise.
+    // La zone y est relue en base : c'est elle qui determine si les especes
+    // sont proposees ici, jamais une comparaison de texte sur son nom (aucune
+    // zone ne s'appelle "Dakar" - ce sont des quartiers, voir DeliveryZone.codEligible).
     const quote = await pricingService.quote({
       items: input.items,
       deliveryZoneId: input.deliveryZoneId,
       deliveryMode: input.deliveryMode,
       promoCode: input.promoCode,
     });
+
+    // Hors zone eligible, le paiement se fait forcement d'avance par mobile
+    // money : le site n'encaisse jamais lui-meme, donc rien ne garantit qu'un
+    // paiement "especes" promis a la livraison arrive un jour. La validation
+    // cote client est un confort, celle-ci est la seule qui compte.
+    if (input.method === "Espèces" && !quote.codEligible) {
+      throw AppError.badRequest("Le paiement en espèces n'est pas proposé pour cette zone.");
+    }
 
     const order = await orderRepository.createWithStockMovement(
       {
@@ -148,6 +160,7 @@ export const orderService = {
         country: input.country,
         deliveryMode: deliveryModeMap.fromLabel(input.deliveryMode),
         method: payMethodMap.fromLabel(input.method),
+        codEligible: quote.codEligible,
         note: input.note ?? null,
         subtotal: quote.subtotal,
         shippingFee: quote.shippingFee,
@@ -198,6 +211,14 @@ export const orderService = {
     // exiger un second clic sur le back-office.
     const settleOnDelivery = input.status === "Livrée" && existing.pay !== "PAYE";
 
+    // Hors zone éligible aux espèces, la commande reste « en attente » tant
+    // que la boutique n'a pas vérifié à la main la réception du paiement
+    // mobile money (voir `admin/Orders.tsx`, `needsPaymentConfirmation`) :
+    // ce clic explicite, et lui seul, déclenche l'e-mail de commande validée.
+    // Le règlement automatique à la livraison (`settleOnDelivery`, Dakar)
+    // n'en a pas besoin, la commande était déjà valide avant l'encaissement.
+    const confirmsPendingPayment = input.pay === "Payé" && existing.pay !== "PAYE" && !existing.codEligible;
+
     const order = await orderRepository.update(id, {
       ...(input.status ? { status: orderStatusMap.fromLabel(input.status) } : {}),
       ...(input.pay ? { pay: payStatusMap.fromLabel(input.pay) } : settleOnDelivery ? { pay: "PAYE" } : {}),
@@ -206,6 +227,12 @@ export const orderService = {
     });
 
     logger.info({ orderId: id, status: order.status, pay: order.pay }, "Commande mise à jour");
+
+    if (confirmsPendingPayment) {
+      const dto = toDto(order);
+      jobQueue.enqueue(JOBS.orderPaymentConfirmed, dto, { idempotencyKey: `payment-confirmed:${id}` });
+    }
+
     return toDto(order);
   },
 };

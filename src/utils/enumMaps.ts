@@ -22,16 +22,20 @@ export const payStatusMap = createEnumMap([
 ] as const);
 
 /**
- * Aucun paiement ne transite par l'API. Sur Dakar l'encaissement se fait en
- * especes a la livraison ; pour les autres regions, la cliente paie d'avance
- * par Wave ou Orange Money hors du site et la boutique verifie l'encaissement a
- * la main. L'enum ne porte donc qu'une seule valeur : le paiement mobile n'est
- * pas un etat suivi ici, seulement une consigne affichee a la cliente.
+ * Aucun paiement ne transite par l'API : ni carte ni compte bancaire n'y est
+ * jamais demande. Sur Dakar, la cliente choisit entre especes a la livraison
+ * et mobile money ; hors Dakar, seul le mobile money est ouvert, paye
+ * d'avance hors du site et verifie a la main par la boutique avant l'envoi
+ * (voir `order.service.ts`, qui refuse "Espèces" hors Dakar).
  */
-export const payMethodMap = createEnumMap([["COD", "Paiement à la livraison"]] as const);
+export const payMethodMap = createEnumMap([
+  ["COD", "Espèces"],
+  ["WAVE", "Wave"],
+  ["ORANGE_MONEY", "Orange Money"],
+] as const);
 
 /** Moyens de paiement ouverts a la vente. */
-export const PAY_METHODS_OFFERTS = ["Paiement à la livraison"] as const;
+export const PAY_METHODS_OFFERTS = ["Espèces", "Wave", "Orange Money"] as const;
 
 export const deliveryModeMap = createEnumMap([
   ["DOMICILE", "Domicile"],

@@ -11,6 +11,7 @@ import { mediaService } from "../services/media.service.js";
 export const JOBS = {
   orderNotifyShop: "order.notify-shop",
   orderConfirmClient: "order.confirm-client",
+  orderPaymentConfirmed: "order.payment-confirmed",
   mediaCleanup: "media.cleanup",
 } as const;
 
@@ -20,6 +21,7 @@ export const jobQueue = new JobQueue({ concurrency: 2 });
 
 jobQueue.register<OrderMailPayload>(JOBS.orderNotifyShop, (payload) => mailService.notifyNewOrder(payload));
 jobQueue.register<OrderMailPayload>(JOBS.orderConfirmClient, (payload) => mailService.confirmToClient(payload));
+jobQueue.register<OrderMailPayload>(JOBS.orderPaymentConfirmed, (payload) => mailService.confirmPaymentToClient(payload));
 jobQueue.register<MediaCleanupPayload>(JOBS.mediaCleanup, (payload) => mediaService.remove(payload));
 
 /**

@@ -1,5 +1,5 @@
 import { getMailer, type MailMessage } from "./external/mailer.js";
-import { settingService } from "./setting.service.js";
+import { settingService, type SettingDto } from "./setting.service.js";
 import { logger } from "../config/logger.js";
 import { env } from "../config/env.js";
 
@@ -52,16 +52,21 @@ export type OrderMailPayload = {
   total: number;
   promoCode?: string | null;
   note?: string | null;
+  /** Espèces, Wave ou Orange Money - détermine le paragraphe de paiement de l'e-mail client. */
+  method: string;
+  /** Espèces à la remise possible sur la zone de cette commande, figé à l'achat (voir `DeliveryZone.codEligible`). */
+  codEligible: boolean;
 };
 
+// Pas de rappel générique des modalités de paiement ici : `confirmToClient`
+// écrit un paragraphe précis, propre au moyen réellement choisi pour CETTE
+// commande - un rappel générique en pied de page serait soit redondant, soit
+// faux pour la commande en question.
 const layout = (shopName: string, title: string, body: string) => `
 <div style="font-family:Helvetica,Arial,sans-serif;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
   <p style="letter-spacing:.22em;text-transform:uppercase;font-size:11px;color:#b8935a;margin:0 0 4px">${esc(shopName)}</p>
   <h1 style="font-size:20px;margin:0 0 20px">${title}</h1>
   ${body}
-  <p style="margin-top:28px;font-size:12px;color:#8c857a">
-    Sur Dakar, paiement en espèces à la livraison. Dans les autres régions, paiement Wave ou Orange Money hors du site, preuve par WhatsApp. Aucun paiement ne se fait sur ce site.
-  </p>
 </div>`;
 
 const itemCell = (item: OrderMailPayload["items"][number]) => {
@@ -127,6 +132,47 @@ const linesText = (order: OrderMailPayload) =>
 const receiptUrl = (order: OrderMailPayload) =>
   SITE_URL ? `${SITE_URL}/commande/${order.id}` : null;
 
+/** Lien de paiement propre au moyen choisi, absent si la boutique ne l'a pas renseigné. */
+const paymentUrl = (method: string, shop: SettingDto) =>
+  method === "Wave" ? shop.wavePaymentUrl : method === "Orange Money" ? shop.orangeMoneyUrl : undefined;
+
+/**
+ * Paragraphe de paiement, propre au moyen réellement choisi pour CETTE
+ * commande.
+ *
+ * Sur une zone éligible aux espèces, espèces ET mobile money se règlent à la
+ * livraison - le lien n'est qu'une commodité pour payer plus tôt. Ailleurs, le
+ * mobile money est le seul moyen ouvert et il est payé d'avance, hors du
+ * site : celui-ci ne peut jamais vérifier lui-même qu'un virement est arrivé,
+ * la boutique confirme donc l'encaissement à la main avant d'expédier (voir
+ * `admin/Orders.tsx`, `needsPaymentConfirmation`).
+ */
+const paymentHtml = (order: OrderMailPayload, shop: SettingDto) => {
+  if (order.method === "Espèces") {
+    return "Réglez-le en espèces à la remise du colis. Aucun paiement ne se fait sur ce site.";
+  }
+  if (order.codEligible) {
+    return `Vous pouvez payer ${esc(shop.shopName)} dès maintenant par Wave ou Orange Money, ou régler directement à la livraison, en espèces ou par mobile money.`;
+  }
+  const url = paymentUrl(order.method, shop);
+  const link = url ? ` en cliquant sur <a href="${esc(url)}" style="color:#b8935a">ce lien</a>` : "";
+  const phone = shop.phone ? ` ou au numéro ${esc(shop.phone)}` : "";
+  return `<strong>Paiement par Wave ou Orange Money pour valider la commande et la finaliser.</strong> Payez ${esc(shop.shopName)} avec ${esc(order.method)}${link}${phone}. Nous confirmons dès réception et votre commande part en préparation.`;
+};
+
+const paymentText = (order: OrderMailPayload, shop: SettingDto) => {
+  if (order.method === "Espèces") {
+    return "Réglez-le en espèces à la remise du colis. Aucun paiement ne se fait sur ce site.";
+  }
+  if (order.codEligible) {
+    return `Vous pouvez payer ${shop.shopName} dès maintenant par Wave ou Orange Money, ou régler directement à la livraison, en espèces ou par mobile money.`;
+  }
+  const url = paymentUrl(order.method, shop);
+  const link = url ? ` sur ${url}` : "";
+  const phone = shop.phone ? ` ou au numéro ${shop.phone}` : "";
+  return `Paiement par Wave ou Orange Money pour valider la commande et la finaliser. Payez ${shop.shopName} avec ${order.method}${link}${phone}. Nous confirmons dès réception et votre commande part en préparation.`;
+};
+
 async function send(message: MailMessage) {
   const mailer = await getMailer();
   await mailer.send(message);
@@ -141,8 +187,25 @@ export const mailService = {
       return;
     }
     const shop = await settingService.get();
-    const link = SITE_URL
-      ? `<p style="font-size:13px"><a href="${SITE_URL}/admin/commandes">Ouvrir le back-office</a></p>`
+
+    // Hors zone éligible aux espèces, le mobile money est payé d'avance, hors
+    // du site : personne ne peut vérifier automatiquement qu'un virement est
+    // arrivé. La boutique doit donc le contrôler elle-même avant de préparer
+    // le colis, puis confirmer le paiement dans le back-office - c'est ce clic
+    // qui déclenche `mailService.confirmPaymentToClient` (voir
+    // `admin/Orders.tsx`, `needsPaymentConfirmation`).
+    const needsPaymentConfirmation = order.method !== "Espèces" && !order.codEligible;
+    const backOfficeUrl = SITE_URL ? `${SITE_URL}/admin/commandes?search=${encodeURIComponent(order.id)}` : null;
+    const paymentNotice = needsPaymentConfirmation
+      ? `<p style="font-size:14px;line-height:1.6;color:#8a5a00;background:#fdf3e3;padding:10px 14px;border-radius:4px">
+           Paiement par ${esc(order.method)} à vérifier avant préparation. Une fois reçu, confirmez-le dans le
+           back-office pour valider la commande.
+         </p>`
+      : "";
+    const link = backOfficeUrl
+      ? `<p style="font-size:13px"><a href="${backOfficeUrl}">${
+          needsPaymentConfirmation ? "Ouvrir la commande pour confirmer le paiement" : "Ouvrir le back-office"
+        }</a></p>`
       : "";
 
     await send({
@@ -153,7 +216,7 @@ export const mailService = {
       html: layout(
         shop.shopName,
         "Nouvelle commande à préparer",
-        `${deliveryBlock(order)}${lineTable(order)}${
+        `${paymentNotice}${deliveryBlock(order)}${lineTable(order)}${
           order.note
             ? `<p style="font-size:13px;margin-top:16px"><strong>Note de la cliente :</strong> ${esc(order.note)}</p>`
             : ""
@@ -162,11 +225,16 @@ export const mailService = {
       text: [
         `Nouvelle commande ${order.id} - ${fcfa(order.total)}`,
         "",
+        ...(needsPaymentConfirmation
+          ? [`Paiement par ${order.method} à vérifier avant préparation. Confirmez-le dans le back-office une fois reçu.`, ""]
+          : []),
         addressText(order),
         "",
         linesText(order),
         ...(order.note ? ["", `Note de la cliente : ${order.note}`] : []),
-        ...(SITE_URL ? ["", `Back-office : ${SITE_URL}/admin/commandes`] : []),
+        ...(backOfficeUrl
+          ? ["", needsPaymentConfirmation ? `Confirmer le paiement : ${backOfficeUrl}` : `Back-office : ${backOfficeUrl}`]
+          : []),
       ].join("\n"),
     });
   },
@@ -192,19 +260,60 @@ export const mailService = {
       html: layout(
         shop.shopName,
         `Merci ${esc(order.client.split(" ")[0])}, votre commande est enregistrée`,
-        `<p style="font-size:14px;line-height:1.6">Nous préparons votre colis. Montant : <strong>${fcfa(order.total)}</strong>. Sur Dakar, réglez-le en espèces à la remise du colis. Dans les autres régions, confirmez la commande par un paiement Wave ou Orange Money sur le numéro que nous vous communiquons, puis envoyez la preuve par WhatsApp : le colis part une fois le paiement confirmé.</p>
+        `<p style="font-size:14px;line-height:1.6">Nous préparons votre colis. Montant : <strong>${fcfa(order.total)}</strong>. ${paymentHtml(order, shop)}</p>
          ${deliveryBlock(order)}${lineTable(order)}${follow}`,
       ),
       text: [
         `Merci ${order.client.split(" ")[0]}, votre commande ${order.id} est enregistrée.`,
         "",
         `Nous préparons votre colis. Montant : ${fcfa(order.total)}.`,
-        "Sur Dakar, réglez en espèces à la remise du colis. Dans les autres régions, confirmez par un paiement Wave ou Orange Money puis envoyez la preuve par WhatsApp.",
+        paymentText(order, shop),
         "",
         addressText(order),
         "",
         linesText(order),
         ...(url ? ["", `Suivre ma commande et télécharger la facture : ${url}`] : []),
+      ].join("\n"),
+    });
+  },
+
+  /**
+   * Confirmation du paiement, une fois vérifié à la main par la boutique
+   * (mobile money hors zone éligible aux espèces : voir `admin/Orders.tsx`,
+   * `needsPaymentConfirmation`). Distincte de `confirmToClient`, qui part à
+   * la création de la commande, avant que le paiement soit arrivé.
+   */
+  async confirmPaymentToClient(order: OrderMailPayload) {
+    if (!order.email) return;
+    const shop = await settingService.get();
+    const url = receiptUrl(order);
+
+    const follow = url
+      ? `<p style="font-size:14px;line-height:1.6;margin-top:20px">
+           <a href="${url}" style="color:#b8935a">Télécharger ma facture</a><br>
+           <span style="font-size:12px;color:#8c857a">Connectez-vous pour retrouver cette commande dans votre espace client.</span>
+         </p>`
+      : "";
+
+    await send({
+      to: order.email,
+      replyTo: ADMIN_EMAIL || undefined,
+      subject: `Paiement confirmé - commande ${order.id}`,
+      html: layout(
+        shop.shopName,
+        `Merci ${esc(order.client.split(" ")[0])}, votre paiement est confirmé`,
+        `<p style="font-size:14px;line-height:1.6">Votre commande est validée et part en préparation. Montant réglé : <strong>${fcfa(order.total)}</strong>.</p>
+         ${deliveryBlock(order)}${lineTable(order)}${follow}`,
+      ),
+      text: [
+        `Merci ${order.client.split(" ")[0]}, votre paiement pour la commande ${order.id} est confirmé.`,
+        "",
+        `Votre commande est validée et part en préparation. Montant réglé : ${fcfa(order.total)}.`,
+        "",
+        addressText(order),
+        "",
+        linesText(order),
+        ...(url ? ["", `Télécharger ma facture : ${url}`] : []),
       ].join("\n"),
     });
   },

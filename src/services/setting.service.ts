@@ -26,6 +26,8 @@ const toDto = (setting: SettingRow) => ({
   facebookUrl: setting.facebookUrl ?? undefined,
   tiktokUrl: setting.tiktokUrl ?? undefined,
   whatsappUrl: setting.whatsappUrl ?? undefined,
+  wavePaymentUrl: setting.wavePaymentUrl ?? undefined,
+  orangeMoneyUrl: setting.orangeMoneyUrl ?? undefined,
   announcement: setting.announcement ?? undefined,
 });
 

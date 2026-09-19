@@ -24,9 +24,14 @@ enum PayStatus {
   ECHOUE
 }
 
-/// Un seul moyen d'encaissement : a la livraison, en especes.
+/// COD = especes (le nom reste "COD", historique, mais le libelle FR est
+/// "Especes" - voir enumMaps.ts). Sur Dakar, la cliente choisit entre les
+/// trois ; hors Dakar, seuls WAVE et ORANGE_MONEY sont ouverts, payes
+/// d'avance puisque le site n'encaisse jamais lui-meme.
 enum PayMethod {
   COD
+  WAVE
+  ORANGE_MONEY
 }
 
 enum OrderStatus {
@@ -227,6 +232,10 @@ model DeliveryZone {
   delay    String
   relay    Boolean @default(false)
   active   Boolean @default(true)
+  /// Espèces à la remise possible sur cette zone (Dakar et ses environs
+  /// immédiats). Faux par défaut : hors de ces zones, seul le mobile money
+  /// est ouvert et il est payé d'avance (voir order.service.ts, PayMethod).
+  codEligible Boolean @default(false)
 
   orders Order[]
 
@@ -298,6 +307,12 @@ model Order {
   deliveryMode   DeliveryMode  @default(DOMICILE)
   deliveryZoneId String?
   deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  /// Figé à l'instant de l'achat, comme le reste de cette section : la zone
+  /// (ou son éligibilité) peut changer après coup, la commande déjà passée ne
+  /// doit pas en dépendre. Détermine si le mobile money de cette commande
+  /// attend une confirmation de paiement avant d'avancer (voir
+  /// admin/Orders.tsx, needsPaymentConfirmation).
+  codEligible Boolean @default(false)
 
   items OrderItem[]
 
@@ -460,6 +475,13 @@ model Setting {
   /// Lien du bouton WhatsApp affiche dans les reseaux sociaux du pied de page,
   /// distinct du numero ci-dessus qui sert au widget de discussion.
   whatsappUrl  String?
+  /// Lien de paiement Wave (pay.wave.com/m/...), affiche au paiement et sur la
+  /// confirmation de commande pour les zones hors Dakar, ou le paiement est
+  /// exige d'avance puisque le site ne peut pas l'encaisser lui-meme.
+  wavePaymentUrl String?
+  /// Meme role que wavePaymentUrl, pour Orange Money. Vide tant que la
+  /// boutique n'a pas encore ce lien : l'option reste alors masquee.
+  orangeMoneyUrl String?
   /// Bandeau libre affiche en haut de la vitrine. Vide = pas de bandeau.
   announcement String?
   updatedAt    DateTime @updatedAt

@@ -41,6 +41,8 @@ export const settingUpdateSchema = z
     facebookUrl: optionalUrl,
     tiktokUrl: optionalUrl,
     whatsappUrl: optionalUrl,
+    wavePaymentUrl: optionalUrl,
+    orangeMoneyUrl: optionalUrl,
     announcement: optionalText(160),
   })
   .strict();

@@ -320,6 +320,7 @@ async function seedBackOffice() {
       facebookUrl: "https://www.facebook.com/share/19dEYf9JgQ/?mibextid=wwXIfr",
       tiktokUrl: "https://www.tiktok.com/@huw.store?_r=1&_t=ZS-99mwNIVpNJv",
       whatsappUrl: "https://wa.me/message/4BL7YUQLZNECM1",
+      wavePaymentUrl: "https://pay.wave.com/m/M_sn_4W0J_Llg8Na9/c/sn/",
     },
   });
 

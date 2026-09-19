@@ -712,6 +712,7 @@ export const openApiDocument = {
           freeFrom: { type: "integer", description: "Montant à partir duquel la livraison est offerte." },
           delay: { type: "string", example: "24 h" },
           relay: { type: "boolean" },
+          codEligible: { type: "boolean", description: "Espèces à la remise possible sur cette zone." },
         },
       },
       OrderItem: {
@@ -744,7 +745,7 @@ export const openApiDocument = {
           promoCode: { type: "string" },
           total: { type: "integer" },
           pay: { type: "string", enum: ["Payé", "En attente", "Échoué"] },
-          method: { type: "string", enum: ["Paiement à la livraison"] },
+          method: { type: "string", enum: ["Espèces", "Wave", "Orange Money"] },
           status: {
             type: "string",
             enum: ["En préparation", "Expédiée", "En cours de livraison", "Livrée", "Retournée"],
@@ -754,7 +755,7 @@ export const openApiDocument = {
       },
       OrderInput: {
         type: "object",
-        required: ["client", "phone", "addressLine", "city", "country", "items"],
+        required: ["client", "phone", "addressLine", "city", "country", "method", "items"],
         properties: {
           client: { type: "string" },
           phone: { type: "string", example: "77 123 45 67" },
@@ -765,7 +766,11 @@ export const openApiDocument = {
           country: { type: "string" },
           deliveryMode: { type: "string", enum: ["Domicile", "Point relais"] },
           deliveryZoneId: { type: "string" },
-          method: { type: "string", enum: ["Paiement à la livraison"] },
+          method: {
+            type: "string",
+            enum: ["Espèces", "Wave", "Orange Money"],
+            description: "Espèces réservé à Dakar ; Wave et Orange Money payés d'avance hors du site.",
+          },
           promoCode: { type: "string" },
           note: { type: "string" },
           items: {

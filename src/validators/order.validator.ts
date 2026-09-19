@@ -18,8 +18,12 @@ export const orderCreateSchema = z.object({
   deliveryMode: z.enum(["Domicile", "Point relais"]).default("Domicile"),
   /** Facultatif : sans zone connue, les frais de port sont a 0 et l'admin tranche. */
   deliveryZoneId: z.string().trim().min(1).optional(),
-  /** Un seul moyen ouvert aujourd'hui : le paiement a la livraison. */
-  method: z.enum(PAY_METHODS_OFFERTS).default("Paiement à la livraison"),
+  /**
+   * Choisi par la cliente : espèces (Dakar uniquement), Wave ou Orange Money.
+   * Pas de valeur par défaut - un moyen de paiement omis serait une commande
+   * dont on ne sait pas comment elle doit être réglée.
+   */
+  method: z.enum(PAY_METHODS_OFFERTS),
   promoCode: z.string().trim().min(1).max(40).optional(),
   note: z.string().trim().max(500).optional(),
   items: z

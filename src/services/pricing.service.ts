@@ -39,6 +39,8 @@ export type PriceBreakdown = {
   total: number;
   promoCode: string | null;
   promoLabel: string | null;
+  /** Espèces à la remise possible sur la zone demandée. Faux sans zone connue. */
+  codEligible: boolean;
 };
 
 export type PriceInput = {
@@ -86,7 +88,7 @@ export const pricingService = {
     const subtotal = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
 
     // Frais de port : la zone est relue en base, jamais recue du navigateur.
-    let zone: { fee: number; freeFrom: number } | null = null;
+    let zone: { fee: number; freeFrom: number; codEligible: boolean } | null = null;
     if (input.deliveryZoneId) {
       zone = await deliveryZoneRepository.findById(input.deliveryZoneId);
       if (!zone) throw AppError.badRequest("Zone de livraison inconnue.");
@@ -110,6 +112,7 @@ export const pricingService = {
       total: subtotal + shippingFee - discount,
       promoCode: promo?.code ?? null,
       promoLabel: promo ? promoLabel(promo) : null,
+      codEligible: zone?.codEligible ?? false,
     };
   },
 };

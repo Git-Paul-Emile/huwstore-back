@@ -30,6 +30,7 @@ maybe("commande de bout en bout (base réelle)", async () => {
     category: `itest-cat-${Date.now()}`,
     product: `itest-prod-${Date.now()}`,
     zone: "",
+    zoneRemote: "",
     variant: "",
     user: "",
   };
@@ -71,16 +72,28 @@ maybe("commande de bout en bout (base réelle)", async () => {
     });
     ids.variant = product.variants[0].id;
     const zone = await prisma.deliveryZone.create({
-      data: { city: `ITest ${Date.now()}`, country: "Test", fee: 2_000, freeFrom: 50_000, delay: "24 h" },
+      data: {
+        city: `ITest ${Date.now()}`,
+        country: "Test",
+        fee: 2_000,
+        freeFrom: 50_000,
+        delay: "24 h",
+        codEligible: true,
+      },
     });
     ids.zone = zone.id;
+    // Zone hors capitale : especes non eligible, pour tester le refus.
+    const zoneRemote = await prisma.deliveryZone.create({
+      data: { city: `ITest Remote ${Date.now()}`, country: "Test", fee: 3_000, freeFrom: 90_000, delay: "72 h" },
+    });
+    ids.zoneRemote = zoneRemote.id;
   });
 
   after(async () => {
     await prisma.order.deleteMany({ where: { items: { some: { productId: ids.product } } } });
     await prisma.product.deleteMany({ where: { id: ids.product } });
     await prisma.category.deleteMany({ where: { id: ids.category } });
-    await prisma.deliveryZone.deleteMany({ where: { id: ids.zone } });
+    await prisma.deliveryZone.deleteMany({ where: { id: { in: [ids.zone, ids.zoneRemote] } } });
     await prisma.user.deleteMany({ where: { id: ids.user } });
     await prisma.$disconnect();
   });
@@ -108,7 +121,7 @@ maybe("commande de bout en bout (base réelle)", async () => {
         country: "Sénégal",
         deliveryMode: "Domicile",
         deliveryZoneId: ids.zone,
-        method: "Paiement à la livraison",
+        method: "Espèces",
         items: [{ variantId: ids.variant, qty: 3 }],
       },
       ids.user,
@@ -132,7 +145,8 @@ maybe("commande de bout en bout (base réelle)", async () => {
           city: "Dakar",
           country: "Sénégal",
           deliveryMode: "Domicile",
-          method: "Paiement à la livraison",
+          deliveryZoneId: ids.zone,
+          method: "Espèces",
           items: [{ variantId: ids.variant, qty: 999 }],
         },
         ids.user,
@@ -140,5 +154,24 @@ maybe("commande de bout en bout (base réelle)", async () => {
     );
     const after = await prisma.stock.findUniqueOrThrow({ where: { variantId: ids.variant } });
     assert.equal(after.qty, before.qty);
+  });
+
+  it("refuse le paiement en espèces hors Dakar", async () => {
+    await assert.rejects(
+      orderService.create(
+        {
+          client: "Awa Test",
+          phone: "771234567",
+          addressLine: "Rue du test, villa 1",
+          city: "Thiès",
+          country: "Sénégal",
+          deliveryMode: "Domicile",
+          deliveryZoneId: ids.zoneRemote,
+          method: "Espèces",
+          items: [{ variantId: ids.variant, qty: 1 }],
+        },
+        ids.user,
+      ),
+    );
   });
 });
