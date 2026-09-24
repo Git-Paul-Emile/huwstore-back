@@ -44,5 +44,7 @@ export const settingUpdateSchema = z
     wavePaymentUrl: optionalUrl,
     orangeMoneyUrl: optionalUrl,
     announcement: optionalText(160),
+    siteAvailable: z.boolean().optional(),
+    unavailableMessage: optionalText(300),
   })
   .strict();

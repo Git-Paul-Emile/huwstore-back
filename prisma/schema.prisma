@@ -484,6 +484,11 @@ model Setting {
   orangeMoneyUrl String?
   /// Bandeau libre affiche en haut de la vitrine. Vide = pas de bandeau.
   announcement String?
+  /// Interrupteur public de la vitrine. Le back-office reste accessible pour
+  /// permettre a l'administratrice de rouvrir le site.
+  siteAvailable Boolean @default(true)
+  /// Message affiche sur l'ecran d'indisponibilite de la vitrine.
+  unavailableMessage String? @db.Text
   updatedAt    DateTime @updatedAt
 }
 

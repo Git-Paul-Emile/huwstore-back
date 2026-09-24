@@ -29,6 +29,8 @@ const toDto = (setting: SettingRow) => ({
   wavePaymentUrl: setting.wavePaymentUrl ?? undefined,
   orangeMoneyUrl: setting.orangeMoneyUrl ?? undefined,
   announcement: setting.announcement ?? undefined,
+  siteAvailable: setting.siteAvailable,
+  unavailableMessage: setting.unavailableMessage ?? undefined,
 });
 
 export type SettingDto = ReturnType<typeof toDto>;
@@ -47,7 +49,7 @@ export const settingService = {
   async update(input: z.infer<typeof settingUpdateSchema>) {
     await settingRepository.ensure();
     const updated = toDto(await settingRepository.update(input));
-    cache.invalidate(CACHE_KEY);
+    cache.set(CACHE_KEY, updated);
     return updated;
   },
 };

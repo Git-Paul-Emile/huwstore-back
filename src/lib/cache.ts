@@ -27,6 +27,11 @@ export class TtlCache {
     return value;
   }
 
+  /** Remplace immédiatement une valeur après une écriture réussie. */
+  set<T>(key: string, value: T, ttlMs = this.defaultTtlMs): void {
+    this.store.set(key, { value, expiresAt: Date.now() + ttlMs });
+  }
+
   /** Oublie une clé (ou tout le cache) après une écriture. */
   invalidate(key?: string): void {
     if (key === undefined) this.store.clear();
